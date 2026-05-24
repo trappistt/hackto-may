@@ -12,7 +12,7 @@ export default function OnboardingProgress({ step }) {
           key={s}
           className={cn(
             "h-1 flex-1 rounded-full transition-colors",
-            i <= index ? "bg-charcoal" : "bg-charcoal/15"
+            i <= index ? "bg-primary" : "bg-mist-200"
           )}
         />
       ))}

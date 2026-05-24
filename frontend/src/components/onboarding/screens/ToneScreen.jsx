@@ -46,8 +46,8 @@ export default function ToneScreen({ tone, onSelectTone, onFinish, loading, erro
               className={cn(
                 "w-full rounded-xl border p-4 text-left transition-all",
                 selected
-                  ? "border-charcoal bg-charcoal text-snow shadow-md"
-                  : "border-charcoal/10 bg-white text-charcoal hover:border-charcoal/25"
+                  ? "border-primary bg-primary text-primary-foreground shadow-md"
+                  : "border-border bg-card text-foreground hover:border-mist-300"
               )}
             >
               <div className="flex items-start justify-between gap-2">
@@ -63,7 +63,7 @@ export default function ToneScreen({ tone, onSelectTone, onFinish, loading, erro
                   </p>
                 </div>
                 {selected && (
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-snow/20">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20">
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   </span>
                 )}

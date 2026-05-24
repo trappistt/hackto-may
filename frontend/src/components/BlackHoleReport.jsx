@@ -37,7 +37,7 @@ function StatCard({ label, value, hint, className }) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-charcoal/10 bg-white p-4 shadow-sm",
+        "rounded-xl border border-border bg-card p-4 shadow-sm",
         className
       )}
     >
@@ -114,7 +114,7 @@ export default function BlackHoleReport({ report, loading, onRefresh, compact = 
         </div>
 
         {rec && (
-          <div className="rounded-xl border border-charcoal/10 bg-charcoal/[0.03] p-5">
+          <div className="rounded-xl border border-border bg-muted p-5">
             <div className="mb-2 flex items-center gap-2 text-charcoal">
               <TrendingDown className="h-4 w-4" />
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
@@ -142,9 +142,9 @@ export default function BlackHoleReport({ report, loading, onRefresh, compact = 
             {report.ranked?.map((row, i) => (
               <li
                 key={row.accountId}
-                className="flex gap-4 rounded-xl border border-charcoal/10 bg-white p-4 transition-colors hover:border-charcoal/20"
+                className="flex gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-mist-300"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-charcoal text-xs font-semibold text-snow">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                   {i + 1}
                 </div>
                 <div className="min-w-0 flex-1 space-y-1">

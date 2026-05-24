@@ -10,7 +10,7 @@ const SIZES = {
 export default function Logo({ size = "md", className, ...props }) {
   return (
     <img
-      src="/moneytor-logo.png"
+      src="/moneytor.svg"
       alt="Moneytor"
       className={cn("w-auto max-w-full object-contain object-left", SIZES[size], className)}
       {...props}

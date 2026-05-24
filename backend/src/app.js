@@ -1,6 +1,7 @@
 import express from "express";
 import * as mock from "./adapters/mockClient.js";
 import { buildBlackHoleReport } from "./services/blackHoleEngine.js";
+import { buildTrends } from "./services/trends.js";
 import { buildUtilizationSnapshot } from "./services/utilization.js";
 import { config, isBackboardConfigured, isElevenLabsConfigured } from "./config.js";
 import * as store from "./db/store.js";
@@ -153,7 +154,11 @@ app.get("/api/users/:id/black-holes", async (req, res, next) => {
         hint: "POST /api/users/:id/accounts/mock with { personaKey: 'alex' }"
       });
     }
-    res.json(buildBlackHoleReport(accounts));
+    const report = buildBlackHoleReport(accounts);
+    res.json({
+      ...report,
+      trends: buildTrends(accounts, report.recommendation)
+    });
   } catch (err) {
     next(err);
   }

@@ -63,9 +63,9 @@ export default function AuthScreen({ onGoogleAuth, loading, error }) {
 
         <div className="relative py-2">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-charcoal/10" />
+            <span className="w-full border-t border-border" />
           </div>
-          <p className="relative mx-auto w-fit bg-white px-3 text-xs text-muted-foreground">
+          <p className="relative mx-auto w-fit bg-card px-3 text-xs text-muted-foreground">
             or
           </p>
         </div>
@@ -74,7 +74,7 @@ export default function AuthScreen({ onGoogleAuth, loading, error }) {
           type="button"
           variant="outline"
           size="lg"
-          className="h-12 w-full gap-3 border-charcoal/15 bg-white text-base font-medium text-charcoal"
+          className="h-12 w-full gap-3 border-border bg-card text-base font-medium text-foreground"
           disabled={loading}
           onClick={() => onGoogleAuth({ mode, provider: "google" })}
         >

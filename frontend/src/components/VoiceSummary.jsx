@@ -77,7 +77,7 @@ export default function VoiceSummary({ userId, report }) {
 
       <CardContent className="space-y-4">
         {script && (
-          <blockquote className="border-l-2 border-charcoal/30 pl-4 text-sm leading-relaxed text-muted-foreground">
+          <blockquote className="border-l-2 border-mist-400 pl-4 text-sm leading-relaxed text-muted-foreground">
             {script}
           </blockquote>
         )}

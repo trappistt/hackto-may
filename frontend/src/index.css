@@ -2,25 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Moneytor color palette (from mist-50 #E5F9FF)
+ *
+ * Surfaces     mist-50 page · foam card · mist-100 muted panels
+ * Structure    mist-200 borders · mist-300 emphasis borders
+ * Brand        mist-600–700 primary actions · mist-800 hover
+ * Text         ink (#36454F) · ink-muted secondary copy
+ *
+ * Tailwind: bg-mist-50, text-ink-muted, bg-primary, border-border, etc.
+ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 194 100% 95%;
     --foreground: 207 16% 26%;
-    --card: 0 0% 100%;
+    --card: 200 100% 99%;
     --card-foreground: 207 16% 26%;
-    --primary: 207 16% 26%;
+    --primary: 196 77% 35%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 207 10% 96%;
+    --secondary: 194 85% 90%;
     --secondary-foreground: 207 16% 26%;
-    --muted: 207 10% 96%;
-    --muted-foreground: 207 10% 42%;
-    --accent: 207 10% 94%;
+    --muted: 194 85% 90%;
+    --muted-foreground: 207 12% 42%;
+    --accent: 194 75% 85%;
     --accent-foreground: 207 16% 26%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 207 12% 88%;
-    --input: 207 12% 88%;
-    --ring: 207 16% 26%;
+    --border: 194 70% 82%;
+    --input: 194 70% 82%;
+    --ring: 196 77% 35%;
     --radius: 0.75rem;
   }
 
@@ -29,12 +40,12 @@
   }
 
   body {
-    @apply min-h-screen bg-white font-sans text-charcoal antialiased;
+    @apply min-h-screen bg-background font-sans text-foreground antialiased;
   }
 
   h1,
   h2,
   h3 {
-    @apply font-display tracking-tight text-charcoal;
+    @apply font-display tracking-tight text-foreground;
   }
 }

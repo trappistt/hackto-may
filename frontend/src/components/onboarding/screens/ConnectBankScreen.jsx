@@ -19,9 +19,9 @@ export default function ConnectBankScreen({ onConnect, loading, error }) {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-charcoal/10 bg-charcoal/[0.02] p-5">
+      <div className="rounded-2xl border border-border bg-muted p-5">
         <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-charcoal text-snow">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
@@ -33,7 +33,7 @@ export default function ConnectBankScreen({ onConnect, loading, error }) {
           {BANKS.map((bank) => (
             <span
               key={bank}
-              className="rounded-lg border border-charcoal/10 bg-white px-3 py-1.5 text-xs font-medium text-charcoal"
+              className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground"
             >
               {bank}
             </span>

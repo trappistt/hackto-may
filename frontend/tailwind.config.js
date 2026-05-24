@@ -10,7 +10,29 @@ export default {
         mono: ['"JetBrains Mono"', "ui-monospace", "monospace"]
       },
       colors: {
+        /* Moneytor palette — anchored on mist-50 #E5F9FF */
+        mist: {
+          50: "#E5F9FF",
+          100: "#CEF3FC",
+          200: "#B5EBF9",
+          300: "#94DFF5",
+          400: "#66CCEB",
+          500: "#38B8DE",
+          600: "#1A9BC4",
+          700: "#147D9E",
+          800: "#156685",
+          900: "#16556E",
+          950: "#103848"
+        },
+        ink: {
+          DEFAULT: "#36454F",
+          muted: "#5c6b74",
+          subtle: "#7d929e",
+          foreground: "#FFFFFF"
+        },
         snow: "#FFFFFF",
+        foam: "#F7FCFF",
+        /* Legacy alias — same as ink */
         charcoal: {
           DEFAULT: "#36454F",
           muted: "#5c6b74",

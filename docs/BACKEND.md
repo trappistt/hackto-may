@@ -14,7 +14,7 @@ The **backend owns all numbers** (interest, rankings, balances). **Backboard** o
 | **2** — Frontend | ✅ Done | Moneytor UI, onboarding flow, dashboard; shadcn + Tailwind; CORS + proxy |
 | **3** — ElevenLabs | ✅ Done | TTS voice summary, ConvAI webhooks, `convai:check`, setup guide |
 
-**You are here:** **Demo-ready** — P0 + P1 + voice (Phase 3) + shadcn UI polish are complete. **P2 is not required** for the hackathon demo. ConvAI spoken agent: [ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md).
+**You are here:** **Demo-ready** — P0 + P1 + voice (Phase 3) + Moneytor UI (mist palette, SVG logo, trend area charts) are complete. **P2 is not required** for the hackathon demo. ConvAI spoken agent: [ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md).
 
 **Pre-demo checklist:**
 
@@ -43,7 +43,7 @@ npm run dev:all         # http://localhost:5173
 | `npm run dev:all` | API `:3001` + UI `:5173` |
 | `npm run dev` | API only |
 | `npm run dev:web` | UI only (Vite proxies `/api` → `:3001`) |
-| `npm test` | 8 backend unit tests |
+| `npm test` | 10 backend unit tests |
 | `npm run build:web` | Production build → `frontend/dist/` |
 | `npm run backboard:check` | Verify Backboard key + assistant (direct API, not `/coach/message`) |
 | `npm run elevenlabs:check` | Verify ElevenLabs API key + TTS |
@@ -57,7 +57,7 @@ npm run dev:all         # http://localhost:5173
 
 | Layer | Technology | Location |
 |-------|------------|----------|
-| **UI** | React 19, Vite 6, shadcn/ui, Tailwind | `frontend/` |
+| **UI** | React 19, Vite 6, shadcn/ui, Tailwind, Recharts | `frontend/` |
 | **API** | Node.js, Express 5, JavaScript (ESM) | `backend/src/app.js` |
 | **Domain** | Pure JS modules (no I/O in engine) | `backend/src/services/` |
 | **Persistence** | SQLite via `better-sqlite3` | `backend/data/app.db` |
@@ -69,7 +69,7 @@ npm run dev:all         # http://localhost:5173
 
 **Intentionally not in stack (for now):** Next.js, TypeScript, OAuth, live bank APIs (Flinks/Plaid stub only).
 
-**UI (Moneytor):** [shadcn/ui](https://ui.shadcn.com/) + Tailwind + [blocks.so](https://blocks.so/) patterns — Inter / Inter Display, white background, charcoal text/buttons, logo at `frontend/public/moneytor-logo.png`.
+**UI (Moneytor):** [shadcn/ui](https://ui.shadcn.com/) + Tailwind + [blocks.so](https://blocks.so/) patterns — Inter / Inter Display, **mist** palette (`#E5F9FF` page background, `#05AB74` brand green from logo, `mist-700` primary actions), logo at `frontend/public/moneytor.svg` (source: repo-root `Moneytor.svg`). Dashboard **area charts** ([corr.sh-style](https://ui.corr.sh/components/area-chart) gradient fills via Recharts) show projected interest bleed and total balance (minimum vs. recommended extra payment).
 
 ---
 
@@ -78,7 +78,7 @@ npm run dev:all         # http://localhost:5173
 | Priority | Capability | Status |
 |----------|------------|--------|
 | P0 | Unified profile | ✅ `GET /profile` |
-| P0 | Interest Black Hole Report | ✅ `GET /black-holes` + UI card |
+| P0 | Interest Black Hole Report | ✅ `GET /black-holes` + UI card + trend charts |
 | P0 | Payoff recommendation | ✅ in black-hole `recommendation` field |
 | P0 | Credit utilization | ✅ `GET /utilization` |
 | P1 | User + onboarding (auth, profile, bank, tone) | ✅ Multi-step UI + SQLite profile fields |
@@ -86,7 +86,7 @@ npm run dev:all         # http://localhost:5173
 | P2 | Year-round tax nudge | ⏳ Not needed for demo |
 | P2 | Spend flags, bank package | ⏳ Not needed for demo |
 
-**Demo path (UI):** http://localhost:5173 → sign up / Google → name & DOB → welcome → connect bank → tone (Friend / Mom / Dad) → **dashboard** (report + voice + coach; responsive desktop & mobile)
+**Demo path (UI):** http://localhost:5173 → sign up / Google → name & DOB → welcome → connect bank → tone (Friend / Mom / Dad) → **dashboard** (report + trend charts + voice + coach; responsive desktop & mobile)
 
 **Demo path (API):** `POST /auth/google` → `PATCH /users/:id` (profile, tone, `onboardingComplete`) → `POST /accounts/mock` → `GET /black-holes` → `POST /coach/message`
 
@@ -99,7 +99,7 @@ npm run dev:all         # http://localhost:5173
 | 3 | Welcome + app explainer | — |
 | 4 | Connect bank (mock → alex persona) | `POST /api/users/:id/accounts/mock` |
 | 5 | Coach tone: Friend / Mom / Dad | `PATCH /api/users/:id` `{ tone, onboardingComplete: true }` |
-| 6 | Dashboard | black holes, voice, coach |
+| 6 | Dashboard | black holes, trends, voice, coach |
 
 `localStorage` key: `hackto_user_id`. Resume incomplete onboarding on reload. **Restart API** after pulling auth changes (`npm run dev:all`).
 
@@ -110,7 +110,7 @@ npm run dev:all         # http://localhost:5173
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │  frontend/ (Vite + React) — :5173 — Moneytor brand          │
-│  • OnboardingFlow → Dashboard (BlackHole, Voice, Coach)       │
+│  • OnboardingFlow → Dashboard (BlackHole, Trends, Voice, Coach) │
 │  • localStorage hackto_user_id · Vite proxy /api → :3001    │
 └────────────────────────────┬────────────────────────────────┘
                              │ HTTP /api/*
@@ -125,8 +125,8 @@ npm run dev:all         # http://localhost:5173
 ┌────────────▼────────────┐     ┌────────────▼──────────────────┐
 │  Domain services        │     │  Integrations                 │
 │  • blackHoleEngine.js   │     │  • backboard.js ✅            │
-│  • utilization.js       │     │  • coachTools.js ✅           │
-│  • coachTools (local)   │     │  • elevenlabs.js ✅         │
+│  • trends.js ✅         │     │  • coachTools.js ✅           │
+│  • utilization.js       │     │  • elevenlabs.js ✅         │
 │  • voiceSummary.js ✅   │     │  • ConvAI webhooks ✅       │
 └────────────┬────────────┘     └───────────────────────────────┘
              │
@@ -164,15 +164,18 @@ hackto-may/
 │   ├── ELEVENLABS_CONVAI.md
 │   └── research/
 ├── frontend/
-│   ├── public/moneytor-logo.png
+│   ├── public/moneytor.svg
 │   ├── src/
 │   │   ├── App.jsx, index.css, api.js, main.jsx
 │   │   ├── lib/utils.js
 │   │   └── components/
 │   │       ├── ui/              # shadcn
 │   │       ├── onboarding/      # Auth, profile, welcome, bank, tone
+│   │       ├── charts/          # TrendAreaChart (Recharts)
 │   │       ├── AppShell.jsx, Dashboard.jsx, Logo.jsx
-│   │       ├── BlackHoleReport.jsx, CoachChat.jsx, VoiceSummary.jsx
+│   │       ├── BlackHoleReport.jsx, FinancialTrends.jsx
+│   │       ├── CoachChat.jsx, VoiceSummary.jsx
+│   │       ├── ui/chart.jsx     # ChartContainer + tooltip
 │   ├── tailwind.config.js, components.json
 │   └── vite.config.js           # proxy /api → :3001
 ├── backend/
@@ -185,6 +188,7 @@ hackto-may/
 │   │   ├── adapters/
 │   │   ├── services/
 │   │   │   ├── blackHoleEngine.js
+│   │   │   ├── trends.js
 │   │   │   ├── utilization.js
 │   │   │   ├── backboard.js
 │   │   │   ├── coachTools.js
@@ -199,6 +203,7 @@ hackto-may/
 │   ├── scripts/check-convai-webhooks.js
 │   ├── scripts/run-eval.js
 │   └── data/sampleClients.json
+├── Moneytor.svg            # logo source
 ├── package.json
 ├── .env.example
 └── README.md
@@ -221,7 +226,7 @@ Base: `http://localhost:3001/api` (or proxied at `http://localhost:5173/api` in 
 | `PATCH` | `/users/:id` | `displayName`, `dateOfBirth`, `tone`, `onboardingComplete`, `bankConnected` |
 | `POST` | `/users/:id/accounts/mock` | Seeds mock data; sets `bankConnected: true` |
 | `GET` | `/users/:id/profile` | unified snapshot + disclaimer |
-| `GET` | `/users/:id/black-holes` | **hero report** |
+| `GET` | `/users/:id/black-holes` | **hero report** + `trends` (projected interest & balance series) |
 | `GET` | `/users/:id/utilization` | per-card + aggregate |
 | `POST` | `/users/:id/goals` | persisted |
 | `GET` | `/users/:id/goals` | |
@@ -260,6 +265,21 @@ Implemented in `backend/src/services/blackHoleEngine.js`.
 **Per liability:** monthly interest, utilization, months at minimum payment, flags (`high_utilization`, `minimum_payment_trap`, `promo_apr_expiring_soon`), `blackHoleScore`.
 
 **Output:** `totalMonthlyInterestBurn`, `ranked[]`, `recommendation` (extra payment + 90-day interest saved), `disclaimer`.
+
+### Trends (projected charts)
+
+Implemented in `backend/src/services/trends.js`. Embedded in `GET /black-holes` as `trends` (no separate route).
+
+**Logic:** From current account balances, estimate past months (reverse minimum-payment simulation) and project forward (minimum vs. minimum + `recommendation.extraPayment` on the top account). Same domain math as the report — not LLM-generated.
+
+**Output:**
+
+| Field | Description |
+|-------|-------------|
+| `interestBurn[]` | `{ month, minimum, optimized }` — total monthly interest bleed |
+| `totalBalance[]` | `{ month, minimum, optimized }` — aggregate debt balance |
+| `meta` | `{ pastMonths, futureMonths, extraPayment, topAccountName }` |
+| `disclaimer` | Educational / projected-data notice |
 
 ---
 
@@ -309,7 +329,9 @@ DB path: `DATABASE_PATH` (default `./backend/data/app.db`). Schema in `backend/s
 | Responsive layout (desktop 2-col, mobile stack) | ✅ |
 | Onboarding: auth → profile → welcome → bank → tone | ✅ |
 | `POST /auth/google` + extended `users` + `migrate.js` | ✅ |
-| Dashboard: report, voice, coach | ✅ |
+| Dashboard: report, trends, voice, coach | ✅ |
+| Mist brand palette + SVG logo | ✅ |
+| Recharts area trend charts (`FinancialTrends.jsx`) | ✅ |
 | Coach tones: Friend / Mom / Dad | ✅ |
 | Sign out + resume incomplete onboarding | ✅ |
 | shadcn/ui + Tailwind + blocks.so patterns | ✅ |
@@ -428,7 +450,7 @@ Frontend optional: `frontend/.env` with `VITE_API_URL=http://localhost:3001` if 
 ## Success metrics
 
 - [x] Black hole report for 3 personas returns different rankings
-- [x] Math covered by unit tests (`blackHoleEngine.test.js`, `store.test.js`, `coachTools.test.js`)
+- [x] Math covered by unit tests (`blackHoleEngine.test.js`, `store.test.js`, `coachTools.test.js`, `trends.test.js`)
 - [x] Coach message matches direct API numbers
 - [x] Browser demo: report + chat without curl
 - [x] `eval/scenarios.yaml` — 7 scenarios; `npm run eval:local` runs 5 without Backboard
@@ -437,6 +459,8 @@ Frontend optional: `frontend/.env` with `VITE_API_URL=http://localhost:3001` if 
 - [x] Voice summary TTS via `POST /voice/speak` + `elevenlabs:check`
 - [x] Onboarding flow persists user profile and reaches dashboard
 - [x] Moneytor responsive UI on desktop and mobile
+- [x] Dashboard trend charts (interest bleed + balance; minimum vs. optimized)
+- [x] Moneytor mist palette + SVG wordmark
 
 ---
 
@@ -470,3 +494,4 @@ See [README.md](../README.md) for curl and UI flows.
 | Env fix | `loadEnv.js` with `override: true`; `isBackboardConfigured()`; startup env path + Backboard status log |
 | Phase 3 closed | Voice summary API, ConvAI webhooks, `convai:check`, ELEVENLABS_CONVAI.md, Copy ID, voice eval, demo-ready docs |
 | UI + onboarding | Moneytor brand, shadcn UI, multi-step onboarding, `/auth/google`, user profile migration, responsive dashboard |
+| UI polish + trends | Mist palette (`#E5F9FF`), SVG logo, `trends.js` + Recharts area charts on dashboard, 10 unit tests |

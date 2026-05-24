@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react";
 import { api } from "@/api.js";
 import { SiteHeader } from "@/components/AppShell.jsx";
 import BlackHoleReport from "./BlackHoleReport.jsx";
+import FinancialTrends from "./FinancialTrends.jsx";
 import CoachChat from "./CoachChat.jsx";
 import VoiceSummary from "./VoiceSummary.jsx";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,10 @@ export default function Dashboard({ user, onSignOut }) {
             report={report}
             loading={loading && !report}
             onRefresh={loadReport}
+          />
+          <FinancialTrends
+            trends={report?.trends}
+            loading={loading && !report}
           />
           <VoiceSummary userId={user.id} report={report} />
         </div>

@@ -89,7 +89,7 @@ export default function CoachChat({ userId, onSend, compact = false }) {
 
         <ScrollArea
           className={cn(
-            "rounded-xl border border-charcoal/10 bg-charcoal/[0.02] p-4",
+            "rounded-xl border border-border bg-muted p-4",
             compact ? "h-[280px]" : "h-[min(420px,50vh)]"
           )}
         >
@@ -105,13 +105,13 @@ export default function CoachChat({ userId, onSend, compact = false }) {
                 className={cn(
                   "max-w-[95%] rounded-xl px-3 py-2.5 text-sm leading-relaxed",
                   m.role === "user"
-                    ? "ml-auto bg-charcoal text-snow"
-                    : "mr-auto border border-charcoal/10 bg-white text-charcoal"
+                    ? "ml-auto bg-primary text-primary-foreground"
+                    : "mr-auto border border-border bg-card text-foreground"
                 )}
               >
                 <p className="whitespace-pre-wrap">{m.content}</p>
                 {m.disclaimer && (
-                  <p className="mt-2 border-t border-charcoal/10 pt-2 text-xs text-muted-foreground">
+                  <p className="mt-2 border-t border-border pt-2 text-xs text-muted-foreground">
                     {m.disclaimer}
                   </p>
                 )}

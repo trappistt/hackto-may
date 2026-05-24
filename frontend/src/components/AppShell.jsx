@@ -17,7 +17,7 @@ export function SiteHeader({ subtitle, actions, logoSize = "lg" }) {
 
 export default function AppShell({ children, className, narrow }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div
         className={cn(
           "mx-auto w-full px-4 py-6 sm:px-6 lg:py-8",

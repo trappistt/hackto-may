@@ -119,7 +119,7 @@ export default function OnboardingFlow({ onComplete, initialUser = null }) {
 
       <div className={cn("mx-auto w-full", STEP_WIDTH[step])}>
         <OnboardingProgress step={step} />
-        <div className="mt-6 rounded-2xl border border-charcoal/10 bg-white p-1 shadow-sm sm:p-2">
+        <div className="mt-6 rounded-2xl border border-border bg-card p-1 shadow-sm sm:p-2">
           {step === "auth" && (
             <AuthScreen onGoogleAuth={handleGoogleAuth} loading={loading} error={error} />
           )}
