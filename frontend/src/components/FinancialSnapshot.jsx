@@ -1,5 +1,7 @@
-import { Car, CreditCard, Landmark, TrendingDown, TrendingUp } from "lucide-react";
+import { CreditCard, Landmark, TrendingDown, TrendingUp } from "lucide-react";
+import InstitutionLogo from "@/components/InstitutionLogo.jsx";
 import { Badge } from "@/components/ui/badge";
+import { resolveInstitutionLogo } from "@/lib/institutionLogos.js";
 import { cn } from "@/lib/utils";
 
 function formatMoney(n) {
@@ -15,10 +17,19 @@ function formatApr(apr) {
 }
 
 function accountIcon(name, type) {
-  const n = name.toLowerCase();
-  if (type === "installment" || n.includes("auto")) {
-    return <Car className="h-5 w-5" />;
+  const logo = resolveInstitutionLogo(name, type);
+  if (logo) {
+    return (
+      <InstitutionLogo
+        src={logo.src}
+        alt={logo.alt}
+        className="h-full w-full rounded-xl border border-border/60"
+        imgClassName="h-6 w-auto"
+      />
+    );
   }
+
+  const n = name.toLowerCase();
   if (type === "line_of_credit" || n.includes("loc")) {
     return <Landmark className="h-5 w-5" />;
   }

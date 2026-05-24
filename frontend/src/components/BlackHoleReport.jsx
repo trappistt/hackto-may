@@ -1,4 +1,5 @@
 import { RefreshCw, TrendingDown } from "lucide-react";
+import InstitutionLogo from "@/components/InstitutionLogo.jsx";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { resolveInstitutionLogo } from "@/lib/institutionLogos.js";
 import { cn } from "@/lib/utils";
 
 function formatMoney(n) {
@@ -139,14 +141,30 @@ export default function BlackHoleReport({ report, loading, onRefresh, compact = 
             Ranked liabilities
           </p>
           <ul className="space-y-2">
-            {report.ranked?.map((row, i) => (
+            {report.ranked?.map((row, i) => {
+              const logo = resolveInstitutionLogo(row.name, row.type);
+              return (
               <li
                 key={row.accountId}
                 className="flex gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-mist-300"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                  {i + 1}
-                </div>
+                {logo ? (
+                  <InstitutionLogo
+                    src={logo.src}
+                    alt={logo.alt}
+                    className="h-8 w-8 shrink-0 rounded-full border border-border/60 p-1"
+                    imgClassName="h-5 w-auto"
+                    fallback={
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                        {i + 1}
+                      </div>
+                    }
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                    {i + 1}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <strong className="text-sm text-charcoal">{row.name}</strong>
@@ -170,7 +188,8 @@ export default function BlackHoleReport({ report, loading, onRefresh, compact = 
                   )}
                 </div>
               </li>
-            ))}
+            );
+            })}
           </ul>
         </div>
 

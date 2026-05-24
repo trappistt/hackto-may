@@ -1,7 +1,7 @@
 import { Building2, Lock, ShieldCheck } from "lucide-react";
+import InstitutionLogo from "@/components/InstitutionLogo.jsx";
 import { Button } from "@/components/ui/button";
-
-const BANKS = ["RBC", "TD", "BMO", "Scotiabank", "CIBC"];
+import { CONNECT_BANKS } from "@/lib/institutionLogos.js";
 
 export default function ConnectBankScreen({ onConnect, loading, error }) {
   return (
@@ -30,12 +30,20 @@ export default function ConnectBankScreen({ onConnect, loading, error }) {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {BANKS.map((bank) => (
+          {CONNECT_BANKS.map((bank) => (
             <span
-              key={bank}
-              className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground"
+              key={bank.name}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground"
             >
-              {bank}
+              {bank.logo ? (
+                <InstitutionLogo
+                  src={bank.logo}
+                  alt={bank.alt ?? bank.name}
+                  className="h-5 w-14 shrink-0 rounded-md p-0.5"
+                  imgClassName="h-4 w-auto"
+                />
+              ) : null}
+              {bank.name}
             </span>
           ))}
         </div>
