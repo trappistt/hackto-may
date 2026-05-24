@@ -183,6 +183,7 @@ export default function OnboardingFlow({ onComplete, initialUser = null }) {
         )}
         {step === "life" && (
           <LifeStoryScreen
+            tone={tone}
             lifeContext={lifeContext}
             onChange={setLifeContext}
             onBack={goBack}
@@ -192,7 +193,7 @@ export default function OnboardingFlow({ onComplete, initialUser = null }) {
           />
         )}
         {step === "fetching" && (
-          <FetchingScreen onFetch={connectBankAndFinish} error={error} />
+          <FetchingScreen tone={tone} onFetch={connectBankAndFinish} error={error} />
         )}
       </div>
     </div>

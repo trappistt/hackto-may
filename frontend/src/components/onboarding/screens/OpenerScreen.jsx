@@ -1,8 +1,11 @@
+import { OpenerIllustration } from "../illustrations.jsx";
 import OnboardingNav from "../OnboardingNav.jsx";
 
 export default function OpenerScreen({ onContinue, loading, error }) {
   return (
     <div className="flex flex-1 flex-col px-1 pb-2 pt-2 sm:px-2">
+      <OpenerIllustration className="mb-6 max-h-40" />
+
       <div className="space-y-6">
         <p className="text-base leading-relaxed text-muted-foreground">
           Hey there! First and foremost I want you to know that{" "}

@@ -1,63 +1,70 @@
-/** Simple line-art illustrations matching onboarding mockups */
+import { cn } from "@/lib/utils";
 
-export function ToneIllustration({ tone }) {
-  if (tone === "mom") {
-    return (
-      <svg viewBox="0 0 120 100" className="h-24 w-28 text-charcoal" aria-hidden>
-        <circle cx="60" cy="28" r="14" fill="none" stroke="currentColor" strokeWidth="2" />
-        <path
-          d="M40 52 Q60 42 80 52 L75 88 Q60 78 45 88 Z"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <circle cx="48" cy="62" r="8" fill="none" stroke="currentColor" strokeWidth="2" />
-      </svg>
-    );
-  }
-  if (tone === "dad") {
-    return (
-      <svg viewBox="0 0 120 100" className="h-24 w-28 text-charcoal" aria-hidden>
-        <circle cx="55" cy="26" r="13" fill="none" stroke="currentColor" strokeWidth="2" />
-        <path
-          d="M38 48 Q55 40 72 48 L68 85 Q55 76 42 85 Z"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <circle cx="72" cy="58" r="7" fill="none" stroke="currentColor" strokeWidth="2" />
-        <path d="M68 65 L78 72" stroke="currentColor" strokeWidth="2" />
-      </svg>
-    );
-  }
+/** Line-art PNGs from onboarding mockups — served from /public/onboarding */
+export const ONBOARDING_ART = {
+  opener: "/onboarding/child-in-boat.png",
+  lifeStory: "/onboarding/boy-and-dog.png",
+  fetching: "/onboarding/dog-fetching.png"
+};
+
+export function OnboardingArt({ src, alt = "", className }) {
   return (
-    <svg viewBox="0 0 120 100" className="h-24 w-28 text-charcoal" aria-hidden>
-      <circle cx="42" cy="30" r="12" fill="none" stroke="currentColor" strokeWidth="2" />
-      <circle cx="78" cy="34" r="12" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M30 55 Q60 72 90 55"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
+    <img
+      src={src}
+      alt={alt}
+      className={cn("mx-auto w-full max-w-[min(100%,280px)] object-contain", className)}
+      aria-hidden={!alt}
+      loading="lazy"
+      decoding="async"
+    />
   );
 }
 
-export function FetchingIllustration() {
+export function OpenerIllustration({ className }) {
+  return <OnboardingArt src={ONBOARDING_ART.opener} className={className} />;
+}
+
+export function LifeStoryIllustration({ className }) {
+  return <OnboardingArt src={ONBOARDING_ART.lifeStory} className={className} />;
+}
+
+export function FetchingIllustration({ className }) {
+  return <OnboardingArt src={ONBOARDING_ART.fetching} className={className} />;
+}
+
+import { Compass, HeartHandshake, Users } from "lucide-react";
+
+/** Icon per coach tone — used as avatars on the tone-picker options. */
+const TONE_ICON = {
+  friend: Users,
+  mom: HeartHandshake,
+  dad: Compass
+};
+
+export function ToneAvatar({ tone, selected = false, className }) {
+  const Icon = TONE_ICON[tone] ?? Users;
   return (
-    <svg viewBox="0 0 140 80" className="mx-auto h-20 w-36 text-charcoal" aria-hidden>
-      <ellipse cx="70" cy="68" rx="40" ry="6" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" />
-      <path
-        d="M25 50 Q45 30 65 48 T105 42"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <circle cx="105" cy="42" r="8" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path d="M98 40 L88 36 M102 48 L94 54" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
+    <div
+      className={cn(
+        "flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors",
+        selected
+          ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+          : "bg-mist-100 text-mist-700 ring-1 ring-mist-200",
+        className
+      )}
+      aria-hidden
+    >
+      <Icon className="h-6 w-6" strokeWidth={1.75} />
+    </div>
+  );
+}
+
+/** Larger badge used when we need a single illustration for the selected tone. */
+export function ToneIllustration({ tone }) {
+  const Icon = TONE_ICON[tone] ?? Users;
+  return (
+    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 ring-1 ring-primary/20">
+      <Icon className="h-9 w-9 text-primary" strokeWidth={1.5} />
+    </div>
   );
 }

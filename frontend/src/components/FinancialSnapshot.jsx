@@ -1,4 +1,4 @@
-import { Car, CreditCard, Landmark, TrendingDown } from "lucide-react";
+import { Car, CreditCard, Landmark, TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -31,8 +31,14 @@ function interestTrendDelta(trends) {
   const prev = series[series.length - 2]?.optimized ?? series[series.length - 2]?.minimum;
   const curr = series[series.length - 1]?.optimized ?? series[series.length - 1]?.minimum;
   if (!prev || !curr) return null;
-  const pct = Math.round(((curr - prev) / prev) * 100);
-  return pct;
+  return Math.round(((curr - prev) / prev) * 100);
+}
+
+function interestTrendBadgeLabel(pct) {
+  if (pct == null) return null;
+  const sign = pct > 0 ? `+${pct}%` : `${pct}%`;
+  const status = pct < 0 ? "Improving" : pct > 0 ? "Rising" : "Steady";
+  return `${sign} · ${status}`;
 }
 
 function estimateDebtFreeYears(report) {
@@ -109,35 +115,43 @@ export default function FinancialSnapshot({ report, trends, loading }) {
         )}
       </div>
 
-      {trends?.interestBurn?.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
+      {trends?.interestBurn?.length > 0 && trendPct != null && (
+        <div className="rounded-2xl border border-border bg-card p-4 lg:pb-4">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Interest trend
             </p>
-            {trendPct != null && (
-              <Badge
-                variant="secondary"
-                className={cn(
-                  "gap-1 font-normal",
-                  trendPct <= 0 ? "text-primary" : "text-destructive"
-                )}
-              >
+            <Badge
+              variant="secondary"
+              className={cn(
+                "gap-1 font-normal",
+                trendPct <= 0 ? "text-primary" : "text-destructive"
+              )}
+            >
+              {trendPct > 0 ? (
+                <TrendingUp className="h-3 w-3" />
+              ) : (
                 <TrendingDown className="h-3 w-3" />
-                {trendPct <= 0 ? `${trendPct}%` : `+${trendPct}%`} this month
-                {trendPct <= 0 && " · Improving"}
-              </Badge>
-            )}
+              )}
+              {interestTrendBadgeLabel(trendPct)}
+            </Badge>
           </div>
-          <div className="flex h-24 items-end justify-between gap-1">
+          <div className="mt-3 flex h-24 items-end gap-1">
             {trends.interestBurn.slice(-6).map((row) => {
-              const max = Math.max(...trends.interestBurn.map((r) => r.minimum));
-              const h = max > 0 ? (row.minimum / max) * 100 : 0;
+              const series = trends.interestBurn.slice(-6);
+              const max = Math.max(...series.map((r) => r.minimum), 1);
+              const min = Math.min(...series.map((r) => r.minimum));
+              const range = Math.max(max - min, max * 0.15, 1);
+              const h = ((row.minimum - min) / range) * 80 + 15;
               return (
-                <div key={row.month} className="flex flex-1 flex-col items-center gap-1">
+                <div
+                  key={row.month}
+                  className="flex h-full flex-1 flex-col items-center justify-end gap-1"
+                >
                   <div
                     className="w-full max-w-[2rem] rounded-t bg-primary/80"
-                    style={{ height: `${Math.max(8, h)}%` }}
+                    style={{ height: `${h}%` }}
+                    title={formatMoney(row.minimum)}
                   />
                   <span className="text-[10px] text-muted-foreground">{row.month}</span>
                 </div>

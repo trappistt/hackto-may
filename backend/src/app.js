@@ -224,7 +224,7 @@ app.get("/api/users/:id/voice/summary", async (req, res, next) => {
     }
 
     const report = buildBlackHoleReport(accounts);
-    const script = buildBlackHoleVoiceScript(report);
+    const script = buildBlackHoleVoiceScript(report, user);
     const top = report.ranked[0] ?? null;
 
     res.json({
@@ -263,7 +263,7 @@ app.post("/api/users/:id/voice/speak", async (req, res, next) => {
     }
 
     const report = buildBlackHoleReport(accounts);
-    const script = req.body?.script?.trim() || buildBlackHoleVoiceScript(report);
+    const script = req.body?.script?.trim() || buildBlackHoleVoiceScript(report, user);
     const { audioBase64, contentType } = await synthesizeSpeech(script);
 
     res.json({

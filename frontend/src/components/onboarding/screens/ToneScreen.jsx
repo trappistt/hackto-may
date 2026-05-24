@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { COACH_TONES } from "../toneCopy.js";
-import { ToneIllustration } from "../illustrations.jsx";
+import { ToneAvatar } from "../illustrations.jsx";
 import OnboardingNav from "../OnboardingNav.jsx";
 
 export { COACH_TONES };
@@ -32,35 +32,35 @@ export default function ToneScreen({
               type="button"
               onClick={() => onSelectTone(t.value)}
               className={cn(
-                "flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-all",
+                "flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all",
                 selected
                   ? "border-primary bg-primary/5 shadow-sm"
                   : "border-border bg-card hover:border-mist-300"
               )}
             >
+              <ToneAvatar tone={t.value} selected={selected} />
+              <div className="min-w-0 flex-1">
+                <p className="font-display text-lg font-semibold text-charcoal">{t.label}</p>
+                <p className="mt-0.5 text-sm leading-snug text-muted-foreground">{t.description}</p>
+              </div>
               <span
                 className={cn(
-                  "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
-                  selected ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                  selected
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border"
                 )}
+                aria-hidden
               >
                 {selected && <Check className="h-3 w-3" strokeWidth={3} />}
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-display text-lg font-semibold text-charcoal">{t.label}</p>
-                <p className="mt-1 text-sm leading-snug text-muted-foreground">{t.description}</p>
-              </div>
             </button>
           );
         })}
       </div>
 
-      <div className="mt-6 flex justify-end">
-        <ToneIllustration tone={tone} />
-      </div>
-
       {error && (
-        <p className="mt-2 text-sm text-destructive" role="alert">
+        <p className="mt-4 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}

@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { profileHeading, profileSubheading } from "../toneCopy.js";
+import { profileHeading, profileLifestyleLabel, profileSubheading } from "../toneCopy.js";
 import OnboardingNav from "../OnboardingNav.jsx";
 
 const WHO_OPTIONS = ["Just me", "Me and my partner", "My household"];
@@ -76,7 +76,7 @@ export default function ProfileScreen({
           </select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="lifestyle">Give me a brief idea about your lifestyle</Label>
+          <Label htmlFor="lifestyle">{profileLifestyleLabel(tone)}</Label>
           <Textarea
             id="lifestyle"
             placeholder="e.g. Renting in Toronto, two kids, trying to pay down cards…"

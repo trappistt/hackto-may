@@ -24,3 +24,46 @@ test("buildBlackHoleVoiceScript mentions top bleed and recommendation", () => {
   assert.match(script, /RBC Visa|extra/i);
   assert.match(script, /educational|advice/i);
 });
+
+test("buildBlackHoleVoiceScript uses mom tone framing", () => {
+  const accounts = [
+    {
+      id: "card-rbc-visa",
+      name: "RBC Visa",
+      type: "credit_card",
+      balance: 4200,
+      apr: 0.2299,
+      minPayment: 105,
+      limit: 5000
+    }
+  ];
+
+  const report = buildBlackHoleReport(accounts);
+  const script = buildBlackHoleVoiceScript(report, {
+    tone: "mom",
+    displayName: "Sam"
+  });
+
+  assert.match(script, /Sam/i);
+  assert.match(script, /listen up|I want you/i);
+});
+
+test("buildBlackHoleVoiceScript uses friend tone framing", () => {
+  const accounts = [
+    {
+      id: "card-rbc-visa",
+      name: "RBC Visa",
+      type: "credit_card",
+      balance: 4200,
+      apr: 0.2299,
+      minPayment: 105,
+      limit: 5000
+    }
+  ];
+
+  const report = buildBlackHoleReport(accounts);
+  const script = buildBlackHoleVoiceScript(report, { tone: "friend" });
+
+  assert.match(script, /Hey/i);
+  assert.match(script, /If you can swing/i);
+});

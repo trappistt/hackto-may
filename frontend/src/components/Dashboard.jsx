@@ -4,7 +4,7 @@ import { api } from "@/api.js";
 import Logo from "@/components/Logo.jsx";
 import FinancialSnapshot from "./FinancialSnapshot.jsx";
 import FinancialTrends from "./FinancialTrends.jsx";
-import CoachChat from "./CoachChat.jsx";
+import CoachPanel from "./CoachPanel.jsx";
 import VoiceSummary from "./VoiceSummary.jsx";
 import { Button } from "@/components/ui/button";
 import { toneLabel } from "@/components/onboarding/toneCopy.js";
@@ -36,6 +36,16 @@ export default function Dashboard({ user, onSignOut }) {
   }, [loadReport]);
 
   const firstName = user.displayName?.trim().split(/\s+/)[0] ?? "there";
+
+  const coachPanel = (
+    <CoachPanel
+      userId={user.id}
+      tone={user.tone}
+      displayName={user.displayName}
+      report={report}
+      onSend={(content) => api.sendCoachMessage(user.id, content)}
+    />
+  );
 
   return (
     <div className="mx-auto w-full max-w-lg lg:max-w-6xl">
@@ -114,12 +124,15 @@ export default function Dashboard({ user, onSignOut }) {
           <VoiceSummary userId={user.id} report={report} />
         </div>
 
-        <div className={cn("lg:sticky lg:top-6", !showCoach && "hidden lg:block")}>
-          <CoachChat
-            userId={user.id}
-            onSend={(content) => api.sendCoachMessage(user.id, content)}
-            compact
-          />
+        <div className="hidden space-y-5 lg:block">
+          {/* Matches Financial Snapshot h1 + gap so coach card lines up with first stat box */}
+          <h1
+            className="pointer-events-none font-display text-2xl font-semibold text-charcoal opacity-0 sm:text-3xl"
+            aria-hidden
+          >
+            Financial Snapshot
+          </h1>
+          <div className="lg:sticky lg:top-6">{coachPanel}</div>
         </div>
       </main>
 
@@ -143,11 +156,16 @@ export default function Dashboard({ user, onSignOut }) {
               Close
             </Button>
           </div>
-          <CoachChat
-            userId={user.id}
-            onSend={(content) => api.sendCoachMessage(user.id, content)}
-            compact
-          />
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <CoachPanel
+              userId={user.id}
+              tone={user.tone}
+              displayName={user.displayName}
+              report={report}
+              onSend={(content) => api.sendCoachMessage(user.id, content)}
+              compact
+            />
+          </div>
         </div>
       )}
     </div>
