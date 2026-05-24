@@ -2,7 +2,7 @@ import express from "express";
 import * as mock from "./adapters/mockClient.js";
 import { buildBlackHoleReport } from "./services/blackHoleEngine.js";
 import { buildUtilizationSnapshot } from "./services/utilization.js";
-import { config } from "./config.js";
+import { config, isBackboardConfigured } from "./config.js";
 import * as store from "./db/store.js";
 import { sendCoachMessage } from "./services/backboard.js";
 
@@ -140,7 +140,7 @@ app.post("/api/users/:id/coach/message", async (req, res, next) => {
     const user = store.getUser(req.params.id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (!config.backboardApiKey || !config.backboardAssistantId) {
+    if (!isBackboardConfigured()) {
       return res.status(501).json({
         error: "Backboard not configured",
         hint: "Set BACKBOARD_API_KEY and BACKBOARD_ASSISTANT_ID in .env",

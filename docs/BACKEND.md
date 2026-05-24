@@ -34,7 +34,27 @@ npm run dev:all         # http://localhost:5173
 | `npm run dev:web` | UI only (Vite proxies `/api` → `:3001`) |
 | `npm test` | 6 backend unit tests |
 | `npm run build:web` | Production build → `frontend/dist/` |
-| `npm run backboard:check` | Verify Backboard key + assistant (no coach route) |
+| `npm run backboard:check` | Verify Backboard key + assistant (direct API, not `/coach/message`) |
+
+---
+
+## Full stack
+
+| Layer | Technology | Location |
+|-------|------------|----------|
+| **UI** | React 19, Vite 6, custom CSS | `frontend/` |
+| **API** | Node.js, Express 5, JavaScript (ESM) | `backend/src/app.js` |
+| **Domain** | Pure JS modules (no I/O in engine) | `backend/src/services/` |
+| **Persistence** | SQLite via `better-sqlite3` | `backend/data/app.db` |
+| **Mock bank data** | JSON personas | `backend/data/sampleClients.json` |
+| **Coach** | Backboard REST (`/threads/messages`, tool loop) | `backend/src/services/backboard.js` |
+| **Voice** (planned) | ElevenLabs | Phase 3 |
+| **Config** | dotenv, repo-root `.env` | `backend/src/loadEnv.js` |
+| **Dev** | `concurrently`, Vite proxy, CORS | root `package.json`, `frontend/vite.config.js` |
+
+**Intentionally not in stack (for now):** Next.js, TypeScript, OAuth, live bank APIs (Flinks/Plaid stub only).
+
+**Optional later:** [shadcn/ui](https://ui.shadcn.com/) + Tailwind in `frontend/` only (UI polish; backend unchanged).
 
 ---
 
@@ -70,13 +90,14 @@ npm run dev:all         # http://localhost:5173
 │  HTTP API (Express) — backend/src/app.js                    │
 │  • CORS: FRONTEND_ORIGIN (default http://localhost:5173)    │
 │  • Auth: none (opaque user UUID)                            │
+│  • Boot: loadEnv.js → config → app (see below)              │
 └────────────┬───────────────────────────────┬────────────────┘
              │                               │
 ┌────────────▼────────────┐     ┌────────────▼──────────────────┐
 │  Domain services        │     │  Integrations                 │
 │  • blackHoleEngine.js   │     │  • backboard.js ✅            │
 │  • utilization.js       │     │  • coachTools.js ✅           │
-│                         │     │  • elevenlabs.js (Phase 3)  │
+│  • coachTools (local)   │     │  • elevenlabs.js (Phase 3)  │
 └────────────┬────────────┘     └───────────────────────────────┘
              │
 ┌────────────▼────────────┐
@@ -95,6 +116,13 @@ npm run dev:all         # http://localhost:5173
 
 **Rule:** LLMs never compute interest, rankings, or balances. They call tools that hit our domain layer (same logic as REST).
 
+### Boot order (`backend/src/index.js`)
+
+1. `import "./loadEnv.js"` — loads repo-root `.env` with **`override: true`**
+2. `config.js` — reads `process.env` (getters for Backboard keys)
+3. `app.js` — routes
+4. On listen: logs env file path + `Backboard: configured` or troubleshooting hint
+
 ---
 
 ## Repo layout
@@ -106,8 +134,7 @@ hackto-may/
 │   └── research/
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx
-│   │   ├── api.js
+│   │   ├── App.jsx, App.css, api.js, main.jsx
 │   │   └── components/
 │   │       ├── DemoSetup.jsx
 │   │       ├── BlackHoleReport.jsx
@@ -116,7 +143,11 @@ hackto-may/
 │   └── package.json
 ├── backend/
 │   ├── src/
-│   │   ├── index.js, env.js, app.js, config.js
+│   │   ├── index.js        # entry: loadEnv → config → app
+│   │   ├── loadEnv.js      # dotenv from repo root (override: true)
+│   │   ├── config.js       # port, paths, isBackboardConfigured()
+│   │   ├── env.js          # deprecated shim → loadEnv
+│   │   ├── app.js
 │   │   ├── adapters/
 │   │   ├── services/
 │   │   │   ├── blackHoleEngine.js
@@ -167,15 +198,21 @@ Executed locally in `coachTools.js` (same data as REST):
 | `scan_interest_black_holes` | `buildBlackHoleReport()` |
 | `recommend_payoff_action` | `recommendation` + top ranked row |
 
+### Coach flow (`backboard.js`)
+
+1. `POST https://app.backboard.io/api/threads/messages` with `assistant_id`, `tools`, optional `thread_id`
+2. While `status === REQUIRES_ACTION"`, run `coachTools` and `POST /threads/tool-outputs`
+3. Persist `thread_id` in `coach_sessions` per user
+
 ---
 
 ## Core domain: Interest Black Hole Report
 
 Implemented in `backend/src/services/blackHoleEngine.js`.
 
-**Per liability:** monthly interest, utilization, months at minimum payment, flags, `blackHoleScore`.
+**Per liability:** monthly interest, utilization, months at minimum payment, flags (`high_utilization`, `minimum_payment_trap`, `promo_apr_expiring_soon`), `blackHoleScore`.
 
-**Output:** `totalMonthlyInterestBurn`, `ranked[]`, `recommendation`, `disclaimer`.
+**Output:** `totalMonthlyInterestBurn`, `ranked[]`, `recommendation` (extra payment + 90-day interest saved), `disclaimer`.
 
 ---
 
@@ -188,7 +225,7 @@ Implemented in `backend/src/services/blackHoleEngine.js`.
 | `goals` | ✅ |
 | `coach_sessions` | ✅ `backboard_thread_id` per user |
 
-DB path: `DATABASE_PATH` (default `./backend/data/app.db`).
+DB path: `DATABASE_PATH` (default `./backend/data/app.db`). Schema in `backend/src/db/schema.sql`.
 
 ---
 
@@ -207,12 +244,13 @@ DB path: `DATABASE_PATH` (default `./backend/data/app.db`).
 | Step | Status |
 |------|--------|
 | `BACKBOARD_API_KEY` + `BACKBOARD_ASSISTANT_ID` in `.env` | ✅ |
-| `backend/src/env.js` loads dotenv before `config.js` | ✅ |
+| `loadEnv.js` — dotenv with `override: true` | ✅ |
 | `backboard.js` + `coachTools.js` + tool loop | ✅ |
 | `POST /coach/message` + `coach_sessions` | ✅ |
+| Startup log: `Backboard: configured` / troubleshooting | ✅ |
 | Upload research doc to assistant (optional) | ⏳ |
 
-**Exit criteria:** met — coach answers grounded in tool JSON (e.g. RBC Visa $95.29/mo for alex).
+**Exit criteria:** met — coach answers grounded in tool JSON (e.g. RBC Visa ~$95.29/mo for alex).
 
 ### Phase 2 — Frontend ✅
 
@@ -225,6 +263,7 @@ DB path: `DATABASE_PATH` (default `./backend/data/app.db`).
 | Coach chat → `POST /coach/message` | ✅ |
 | Demo onboarding (persona + tone) | ✅ |
 | `localStorage` user id + “New demo” reset | ✅ |
+| Coach 501 fallback message in UI when Backboard off | ✅ |
 
 **Exit criteria:** met — full demo in browser without `curl`.
 
@@ -233,6 +272,7 @@ DB path: `DATABASE_PATH` (default `./backend/data/app.db`).
 1. Webhook tool endpoints for ConvAI
 2. Voice summary of top black hole
 3. Run `eval/scenarios.yaml` manually or in CI
+4. (Optional) shadcn/ui + Tailwind in `frontend/`
 
 ---
 
@@ -248,16 +288,41 @@ BACKBOARD_ASSISTANT_ID=
 ELEVENLABS_API_KEY=
 ```
 
-Copy `.env.example` → `.env`. API loads via `backend/src/env.js` on boot.
+Copy `.env.example` → `.env`. Loaded from **repo root** by `backend/src/loadEnv.js` (`override: true`).
 
-Frontend optional override: `frontend/.env` with `VITE_API_URL=http://localhost:3001` if not using the Vite proxy.
+After editing `.env`, **restart** the API. On startup you should see:
+
+```text
+Env file: /path/to/hackto-may/.env (found)
+Backboard: configured (coach enabled)
+```
+
+### Troubleshooting: “Backboard not configured”
+
+If `.env` looks correct but startup says **not configured** (or the UI shows the coach fallback):
+
+1. **Save** `.env` and **restart** `npm run dev:all`.
+2. **Stale shell exports** — if you ran `set -a && source .env` when keys were still empty, your terminal may export `BACKBOARD_API_KEY=""`. dotenv’s default is to skip already-set vars; we use **`override: true`** in `loadEnv.js` so file values win. If problems persist, open a **new terminal** or:
+   ```bash
+   unset BACKBOARD_API_KEY BACKBOARD_ASSISTANT_ID
+   npm run dev:all
+   ```
+3. Confirm variable **names** match exactly (no typos, no spaces around `=`).
+4. Run `npm run backboard:check` to verify keys against Backboard directly.
+
+| Variable | Where to get it |
+|----------|-----------------|
+| `BACKBOARD_API_KEY` | [Backboard dashboard](https://app.backboard.io) → API keys |
+| `BACKBOARD_ASSISTANT_ID` | Dashboard assistant id, or create via API / `backboard:check` |
+
+Frontend optional: `frontend/.env` with `VITE_API_URL=http://localhost:3001` if not using the Vite proxy.
 
 ---
 
 ## Compliance
 
 - ✅ Financial responses include `disclaimer` string (API + UI)
-- Backboard assistant: non-judgmental, call tools for numbers, not licensed advice
+- Backboard assistant `system_prompt`: non-judgmental, call tools for numbers, not licensed advice
 - `guardrails.js` — later
 
 ---
@@ -265,10 +330,11 @@ Frontend optional override: `frontend/.env` with `VITE_API_URL=http://localhost:
 ## Success metrics
 
 - [x] Black hole report for 3 personas returns different rankings
-- [x] Math covered by unit tests
+- [x] Math covered by unit tests (`blackHoleEngine.test.js`, `store.test.js`, `coachTools.test.js`)
 - [x] Coach message matches direct API numbers
 - [x] Browser demo: report + chat without curl
 - [x] `eval/scenarios.yaml` — 6 scenarios documented
+- [x] Env loading reliable (`loadEnv.js` + startup diagnostics)
 
 ---
 
@@ -282,7 +348,7 @@ npm run dev:all
 
 npm test
 npm run backboard:check
-npm run build:web    # production static build
+npm run build:web
 ```
 
 See [README.md](../README.md) for curl and UI flows.
@@ -291,9 +357,10 @@ See [README.md](../README.md) for curl and UI flows.
 
 ## Changelog (recent)
 
-| Date | Milestone |
-|------|-----------|
+| Milestone | What shipped |
+|-----------|----------------|
 | Phase 0–1 | Black-hole engine, REST API, SQLite persistence |
 | Phase 1b | `backboard.js`, `coachTools.js`, `POST /coach/message`, `coach_sessions` |
 | Phase 2 | `frontend/` Vite app, CORS, Black Hole Report + coach chat UI |
+| Env fix | `loadEnv.js` with `override: true`; `isBackboardConfigured()`; startup env path + Backboard status log |
 | Phase 3 | ElevenLabs voice (planned) |
