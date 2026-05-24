@@ -127,3 +127,37 @@ export function listGoals(userId) {
     createdAt: row.created_at
   }));
 }
+
+/** @param {string} userId */
+export function getCoachSession(userId) {
+  const row = getDb()
+    .prepare(
+      `SELECT backboard_assistant_id, backboard_thread_id
+       FROM coach_sessions WHERE user_id = ?`
+    )
+    .get(userId);
+
+  if (!row) return null;
+
+  return {
+    backboardAssistantId: row.backboard_assistant_id,
+    backboardThreadId: row.backboard_thread_id
+  };
+}
+
+/**
+ * @param {string} userId
+ * @param {string} assistantId
+ * @param {string} threadId
+ */
+export function saveCoachSession(userId, assistantId, threadId) {
+  getDb()
+    .prepare(
+      `INSERT INTO coach_sessions (user_id, backboard_assistant_id, backboard_thread_id)
+       VALUES (?, ?, ?)
+       ON CONFLICT(user_id) DO UPDATE SET
+         backboard_assistant_id = excluded.backboard_assistant_id,
+         backboard_thread_id = excluded.backboard_thread_id`
+    )
+    .run(userId, assistantId, threadId);
+}

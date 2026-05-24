@@ -1,16 +1,28 @@
 # hackto-may
 
-Proactive financial copilot for Canadian professionals (25–45): escape **interest black holes** with a backend-first API, then chat/voice via Backboard and ElevenLabs.
+Proactive financial copilot for Canadian professionals (25–45): escape **interest black holes** with a backend-first API, then chat via Backboard (voice via ElevenLabs next).
 
-## Quick start
+## Quick start (full demo UI)
 
 ```bash
 npm install
-npm run dev          # http://localhost:3001
-npm test
+cd frontend && npm install && cd ..
+npm run dev:all
 ```
 
-## Try the hero endpoint
+Open **http://localhost:5173** — pick a demo persona, view the Black Hole Report, chat with the coach.
+
+| Command | What it runs |
+|---------|----------------|
+| `npm run dev:all` | API `:3001` + UI `:5173` |
+| `npm run dev` | API only |
+| `npm run dev:web` | UI only (proxies `/api` to the API) |
+| `npm test` | Backend unit tests |
+| `npm run backboard:check` | Verify Backboard credentials |
+
+Copy `.env.example` → `.env` for Backboard coach chat (`BACKBOARD_API_KEY`, `BACKBOARD_ASSISTANT_ID`).
+
+## Try the API (curl)
 
 ```bash
 USER=$(curl -s -X POST http://localhost:3001/api/users \
@@ -22,40 +34,33 @@ curl -s -X POST "http://localhost:3001/api/users/$USER/accounts/mock" \
   -d '{"personaKey":"alex"}' | jq
 
 curl -s "http://localhost:3001/api/users/$USER/black-holes" | jq
+
+curl -s -X POST "http://localhost:3001/api/users/$USER/coach/message" \
+  -H 'Content-Type: application/json' \
+  -d '{"content":"Which debt hurts me most per month?"}' | jq
 ```
 
 ## Project structure
 
 ```text
 hackto-may/
+├── frontend/         # Vite + React demo UI
 ├── backend/          # API, domain logic, mock data, eval scenarios
 ├── docs/             # Backend plan + research
-├── package.json
-└── .env.example
+└── package.json
 ```
 
 | Path | Purpose |
 |------|---------|
 | [docs/BACKEND.md](docs/BACKEND.md) | Architecture and phased build plan |
-| [docs/research/](docs/research/) | Product and market research |
+| [frontend/src/](frontend/src/) | Black hole report + coach chat |
 | [backend/src/](backend/src/) | Express API and interest black-hole engine |
 | [backend/data/sampleClients.json](backend/data/sampleClients.json) | Demo personas (alex, sam, jordan) |
-| [backend/eval/scenarios.yaml](backend/eval/scenarios.yaml) | Agent evaluation scripts |
 
 ## Build phases
 
 1. **Phase 0** ✅ black-hole engine + mock accounts + REST API  
-2. **Phase 1** ✅ SQLite persistence (users, accounts, goals → `backend/data/app.db`)  
-3. **Phase 1b** (next): Backboard coach + tools  
-4. **Phase 2**: Frontend (`frontend/`)  
-5. **Phase 3**: ElevenLabs voice + demo polish  
-
-Copy `.env.example` to `.env` when adding Backboard or ElevenLabs keys.
-
-### Verify Backboard
-
-```bash
-npm run backboard:check
-```
-
-Expect `✓ API key valid`, your assistant name, and a short test reply.
+2. **Phase 1** ✅ SQLite persistence  
+3. **Phase 1b** ✅ Backboard coach + tools  
+4. **Phase 2** ✅ Frontend (`frontend/`)  
+5. **Phase 3** (next): ElevenLabs voice + demo polish  

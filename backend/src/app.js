@@ -4,8 +4,18 @@ import { buildBlackHoleReport } from "./services/blackHoleEngine.js";
 import { buildUtilizationSnapshot } from "./services/utilization.js";
 import { config } from "./config.js";
 import * as store from "./db/store.js";
+import { sendCoachMessage } from "./services/backboard.js";
 
 const app = express();
+
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", config.corsOrigin);
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
@@ -125,18 +135,32 @@ app.get("/api/users/:id/goals", (req, res) => {
   res.json({ goals: store.listGoals(req.params.id) });
 });
 
-// Phase 1b: Backboard proxy — stub until BACKBOARD_API_KEY is set
-app.post("/api/users/:id/coach/message", (req, res) => {
-  const user = store.getUser(req.params.id);
-  if (!user) return res.status(404).json({ error: "User not found" });
-  if (!config.backboardApiKey) {
-    return res.status(501).json({
-      error: "Backboard not configured",
-      hint: "Set BACKBOARD_API_KEY and BACKBOARD_ASSISTANT_ID in .env",
-      fallback: "Use GET /api/users/:id/black-holes for demo without coach"
-    });
+app.post("/api/users/:id/coach/message", async (req, res, next) => {
+  try {
+    const user = store.getUser(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (!config.backboardApiKey || !config.backboardAssistantId) {
+      return res.status(501).json({
+        error: "Backboard not configured",
+        hint: "Set BACKBOARD_API_KEY and BACKBOARD_ASSISTANT_ID in .env",
+        fallback: "Use GET /api/users/:id/black-holes for demo without coach"
+      });
+    }
+
+    const content = req.body?.content?.trim();
+    if (!content) {
+      return res.status(400).json({ error: "content is required" });
+    }
+
+    const result = await sendCoachMessage(req.params.id, content);
+    res.json({ reply: result.reply, threadId: result.threadId, disclaimer: config.disclaimer });
+  } catch (err) {
+    if (err.status && err.status >= 400 && err.status < 500) {
+      return res.status(502).json({ error: err.message });
+    }
+    next(err);
   }
-  res.status(501).json({ error: "Backboard integration pending — see docs/BACKEND.md Phase 1b" });
 });
 
 app.use((err, _req, res, _next) => {

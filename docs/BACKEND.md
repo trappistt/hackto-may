@@ -1,21 +1,59 @@
 # Backend build plan
 
-How we build the API **first** in `hackto-may`, before polishing the frontend. The backend owns **all numbers**; Backboard and ElevenLabs own **conversation and voice** later.
+Architecture and phased delivery for **hackto-may** ([github.com/trappistt/hackto-may](https://github.com/trappistt/hackto-may)).
+
+The **backend owns all numbers** (interest, rankings, balances). **Backboard** owns coach chat; **ElevenLabs** (Phase 3) will own voice. The **frontend** (`frontend/`) is a thin client over `/api/*` only.
+
+## Current status
+
+| Phase | Status | Notes |
+|-------|--------|--------|
+| **0** — Domain + REST API | ✅ Done | Black-hole engine, mock personas, all P0 routes |
+| **1** — SQLite persistence | ✅ Done | Users, accounts, goals survive restart |
+| **1b** — Backboard coach | ✅ Done | `backboard.js` + `coachTools.js`; tool loop; `coach_sessions` |
+| **2** — Frontend | ✅ Done | Vite + React in `frontend/`; report + coach chat; CORS + proxy |
+| **3** — ElevenLabs | ⏳ Not started | |
+
+**You are here:** Phase **3** — ElevenLabs voice + demo polish.
+
+**First-time setup:**
+
+```bash
+npm install
+cd frontend && npm install && cd ..
+cp .env.example .env    # add BACKBOARD_* for coach chat
+npm run dev:all         # http://localhost:5173
+```
+
+**Commands:**
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev:all` | API `:3001` + UI `:5173` |
+| `npm run dev` | API only |
+| `npm run dev:web` | UI only (Vite proxies `/api` → `:3001`) |
+| `npm test` | 6 backend unit tests |
+| `npm run build:web` | Production build → `frontend/dist/` |
+| `npm run backboard:check` | Verify Backboard key + assistant (no coach route) |
+
+---
 
 ## Product slice (demo-critical)
 
-| Priority | Capability | Backend owns |
-|----------|------------|--------------|
-| P0 | Unified profile | Aggregate mock/real accounts per user |
-| P0 | Interest Black Hole Report | Rank debts by monthly bleed, flag min-payment traps |
-| P0 | Payoff recommendation | One actionable extra payment + savings estimate |
-| P0 | Credit utilization | Per-card and total utilization |
-| P1 | Coach proxy | Forward chat to Backboard; run tool loop against our API |
-| P1 | User + onboarding | Persona, tone, stress context (stored locally) |
-| P2 | Year-round tax nudge | One rule-based insight (RRSP/FHSA-style, Canadian) |
-| P2 | Spend flags, bank package | Mock only; not on demo path |
+| Priority | Capability | Status |
+|----------|------------|--------|
+| P0 | Unified profile | ✅ `GET /profile` |
+| P0 | Interest Black Hole Report | ✅ `GET /black-holes` + UI card |
+| P0 | Payoff recommendation | ✅ in black-hole `recommendation` field |
+| P0 | Credit utilization | ✅ `GET /utilization` |
+| P1 | User + onboarding (persona, tone, stress) | ✅ SQLite `users` + demo setup UI |
+| P1 | Coach proxy (Backboard + tools) | ✅ API + chat panel |
+| P2 | Year-round tax nudge | ⏳ |
+| P2 | Spend flags, bank package | ⏳ |
 
-**Demo path:** `POST /users` → onboarding context → `POST /accounts/mock` → `GET /black-holes` → `POST /goals` → `POST /coach/message` (Backboard).
+**Demo path (UI):** open http://localhost:5173 → pick persona (alex / sam / jordan) → view Black Hole Report → ask coach
+
+**Demo path (API):** `POST /users` → `POST /accounts/mock` → `GET /black-holes` → `POST /coach/message`
 
 ---
 
@@ -23,38 +61,39 @@ How we build the API **first** in `hackto-may`, before polishing the frontend. T
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│  Frontend (later) — static/SPA, calls /api/* only           │
+│  frontend/ (Vite + React) — :5173                           │
+│  • DemoSetup, BlackHoleReport, CoachChat                    │
+│  • localStorage user id · Vite proxy /api → :3001           │
 └────────────────────────────┬────────────────────────────────┘
-                             │
+                             │ HTTP /api/*
 ┌────────────────────────────▼────────────────────────────────┐
-│  HTTP API (Express) — backend/src/                            │
-│  • Auth: none for hack (user id in path or header)           │
-│  • Validation: Zod on request bodies                        │
-│  • Errors: consistent JSON { error, code }                  │
-└────────────┬───────────────────────────────┬──────────────────┘
+│  HTTP API (Express) — backend/src/app.js                    │
+│  • CORS: FRONTEND_ORIGIN (default http://localhost:5173)    │
+│  • Auth: none (opaque user UUID)                            │
+└────────────┬───────────────────────────────┬────────────────┘
              │                               │
 ┌────────────▼────────────┐     ┌────────────▼──────────────────┐
 │  Domain services        │     │  Integrations                 │
-│  • blackHoleEngine      │     │  • backboard.js (threads)     │
-│  • payoff               │     │  • elevenlabs.js (phase 2)  │
-│  • utilization          │     └───────────────────────────────┘
-│  • taxNudges (rules)    │
+│  • blackHoleEngine.js   │     │  • backboard.js ✅            │
+│  • utilization.js       │     │  • coachTools.js ✅           │
+│                         │     │  • elevenlabs.js (Phase 3)  │
+└────────────┬────────────┘     └───────────────────────────────┘
+             │
+┌────────────▼────────────┐
+│  adapters/              │
+│  • mockClient.js ✅      │
+│  • apiClient.js (stub)  │
 └────────────┬────────────┘
              │
 ┌────────────▼────────────┐
-│  Data adapter interface │
-│  • mockClient (now)     │
-│  • apiClient (stub)     │
-└────────────┬────────────┘
-             │
-┌────────────▼────────────┐
-│  SQLite (users, goals,  │
-│   backboard thread ids) │
+│  SQLite — db/store.js   │
+│  • users, user_accounts │
+│  • goals, coach_sessions│
 │  + sampleClients.json   │
 └─────────────────────────┘
 ```
 
-**Rule:** LLMs never compute interest, rankings, or balances. They call tools that hit our routes.
+**Rule:** LLMs never compute interest, rankings, or balances. They call tools that hit our domain layer (same logic as REST).
 
 ---
 
@@ -65,239 +104,196 @@ hackto-may/
 ├── docs/
 │   ├── BACKEND.md
 │   └── research/
-│       └── canada-credit-interest-black-holes.md
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── api.js
+│   │   └── components/
+│   │       ├── DemoSetup.jsx
+│   │       ├── BlackHoleReport.jsx
+│   │       └── CoachChat.jsx
+│   ├── vite.config.js      # proxy /api → :3001
+│   └── package.json
 ├── backend/
 │   ├── src/
-│   │   ├── index.js            # server entry
-│   │   ├── app.js              # Express routes
-│   │   ├── config.js
-│   │   ├── adapters/           # mock + future bank API
-│   │   ├── services/           # black-hole math, utilization
-│   │   └── db/                 # SQLite init, schema, store
-│   ├── data/app.db             # created at runtime (gitignored)
-│   ├── data/
-│   │   └── sampleClients.json
-│   └── eval/
-│       └── scenarios.yaml
+│   │   ├── index.js, env.js, app.js, config.js
+│   │   ├── adapters/
+│   │   ├── services/
+│   │   │   ├── blackHoleEngine.js
+│   │   │   ├── utilization.js
+│   │   │   ├── backboard.js
+│   │   │   └── coachTools.js
+│   │   └── db/
+│   ├── scripts/check-backboard.js
+│   └── data/sampleClients.json
 ├── package.json
 ├── .env.example
 └── README.md
 ```
 
-`frontend/` will be added in Phase 2.
-
 ---
 
 ## API contract (v0)
 
-Base: `http://localhost:3001/api`
+Base: `http://localhost:3001/api` (or proxied at `http://localhost:5173/api` in dev)
 
-### Users & onboarding
+### Implemented ✅
 
-| Method | Path | Body | Returns |
-|--------|------|------|---------|
-| `POST` | `/users` | `{ persona?, tone? }` | `{ id, persona, tone }` |
-| `PATCH` | `/users/:id` | `{ stressTopics?, goals?, tone? }` | user |
-| `GET` | `/users/:id` | — | user |
+| Method | Path | Notes |
+|--------|------|--------|
+| `GET` | `/health` | `{ ok, service, persistence: "sqlite" }` |
+| `POST` | `/users` | `{ persona?, tone?, stressTopics? }` |
+| `GET` | `/users/:id` | |
+| `PATCH` | `/users/:id` | `{ persona?, tone?, stressTopics? }` |
+| `POST` | `/users/:id/accounts/mock` | `{ personaKey?: "alex" \| "sam" \| "jordan" }` |
+| `GET` | `/users/:id/profile` | unified snapshot + disclaimer |
+| `GET` | `/users/:id/black-holes` | **hero report** |
+| `GET` | `/users/:id/utilization` | per-card + aggregate |
+| `POST` | `/users/:id/goals` | persisted |
+| `GET` | `/users/:id/goals` | |
+| `POST` | `/users/:id/coach/message` | `{ content }` → `{ reply, threadId, disclaimer }` |
 
-`persona`: `career_professional` | `high_loan` | `recovering`  
-`tone`: `coach` | `companion` | `chief_of_staff`
+`persona` (user record): `career_professional` | `high_loan` | `recovering`  
+`tone`: `coach` | `companion` | `chief_of_staff`  
+`personaKey` (mock seed): `alex` | `sam` | `jordan`
 
-### Financial data (mock for hack)
+### Backboard tools (coach)
 
-| Method | Path | Body | Returns |
-|--------|------|------|---------|
-| `POST` | `/users/:id/accounts/mock` | `{ personaKey?: "alex" \| "sam" \| "jordan" }` | accounts linked |
-| `GET` | `/users/:id/profile` | — | unified snapshot |
-| `GET` | `/users/:id/black-holes` | — | **hero report** |
-| `GET` | `/users/:id/utilization` | — | per-card + total |
+Executed locally in `coachTools.js` (same data as REST):
 
-### Actions
-
-| Method | Path | Body | Returns |
-|--------|------|------|---------|
-| `POST` | `/users/:id/goals` | `{ type, accountId?, extraPayment? }` | goal |
-| `GET` | `/users/:id/goals` | — | goals[] |
-
-### Coach (Backboard — phase 1b)
-
-| Method | Path | Body | Returns |
-|--------|------|------|---------|
-| `POST` | `/users/:id/coach/message` | `{ content }` | `{ reply, threadId }` |
-
-Backboard tools (implemented as HTTP handlers the coach calls):
-
-- `get_unified_profile` → `GET /users/:id/profile`
-- `scan_interest_black_holes` → `GET /users/:id/black-holes`
-- `recommend_payoff_action` → included in black-holes response or dedicated field
-
-### Health
-
-| Method | Path | Returns |
-|--------|------|---------|
-| `GET` | `/health` | `{ ok: true }` |
+| Tool | Maps to |
+|------|---------|
+| `get_unified_profile` | Profile snapshot |
+| `scan_interest_black_holes` | `buildBlackHoleReport()` |
+| `recommend_payoff_action` | `recommendation` + top ranked row |
 
 ---
 
 ## Core domain: Interest Black Hole Report
 
-**Input:** list of liabilities `{ id, name, type, balance, apr, minPayment, limit?, promoAprExpiresAt? }`
+Implemented in `backend/src/services/blackHoleEngine.js`.
 
-**Per liability:**
+**Per liability:** monthly interest, utilization, months at minimum payment, flags, `blackHoleScore`.
 
-- `monthlyInterest = balance * (apr / 12)`
-- `utilization = balance / limit` (cards only)
-- `principalFromMin = max(0, minPayment - monthlyInterest)`
-- `monthsAtMin` — amortization loop (cap at 600)
-- `blackHoleScore` — weighted rank (interest $ dominates; boost high utilization; boost promo expiry soon)
-
-**Output:**
-
-```json
-{
-  "totalMonthlyInterestBurn": 187.42,
-  "ranked": [
-    {
-      "accountId": "card-visa",
-      "name": "RBC Visa",
-      "monthlyInterest": 89.5,
-      "utilization": 0.87,
-      "flags": ["high_utilization", "minimum_payment_trap"],
-      "monthsAtMinimum": 94
-    }
-  ],
-  "recommendation": {
-    "accountId": "card-visa",
-    "extraPayment": 75,
-    "interestSaved90Days": 412.0,
-    "rationale": "avalanche"
-  },
-  "disclaimer": "Educational insights only, not financial advice."
-}
-```
-
-Implement in `blackHoleEngine.js` with **unit-testable pure functions** (no DB in math).
-
----
-
-## Data adapter interface
-
-Both `mockClient` and future `apiClient` expose:
-
-```js
-getAccounts(userId) → Account[]
-getTransactions(userId, opts?) → Transaction[]  // phase 2
-getIncome(userId) → IncomeHint | null           // phase 2
-```
-
-Hackathon: only `mockClient` is wired; `apiClient` throws `NotImplemented` with a clear message.
-
-Personas live in `backend/data/sampleClients.json` — seed on `POST .../accounts/mock`.
+**Output:** `totalMonthlyInterestBurn`, `ranked[]`, `recommendation`, `disclaimer`.
 
 ---
 
 ## Persistence (SQLite)
 
-Minimal tables:
+| Table | Used |
+|-------|------|
+| `users` | ✅ |
+| `user_accounts` | ✅ |
+| `goals` | ✅ |
+| `coach_sessions` | ✅ `backboard_thread_id` per user |
 
-- `users` — id, persona, tone, stress_topics (JSON), created_at
-- `user_accounts` — user_id, account snapshot JSON (from mock seed)
-- `goals` — user_id, type, payload JSON
-- `coach_sessions` — user_id, backboard_assistant_id, backboard_thread_id
-
-No need for full transaction history in v0.
+DB path: `DATABASE_PATH` (default `./backend/data/app.db`).
 
 ---
 
 ## Build phases (order of work)
 
-### Phase 0 — Domain without integrations (do first)
+### Phase 0 — Domain without integrations ✅
 
-1. `sampleClients.json` — 3 personas
-2. `blackHoleEngine.js` + `payoff.js` + `utilization.js`
-3. `mockClient.js`
-4. Routes: health, users, mock seed, profile, black-holes
-5. Manual test: `curl` black-holes for Alex → plausible numbers
-
-**Exit criteria:** `GET /api/users/:id/black-holes` returns ranked report from mock data.
+**Exit criteria:** met — `GET /api/users/:id/black-holes` returns ranked report.
 
 ### Phase 1 — Persistence & goals ✅
 
-1. SQLite schema + migrations on boot (`backend/src/db/`)
-2. Store users and seeded accounts (`user_accounts` table)
-3. Goals CRUD (SQLite)
+**Exit criteria:** met — data survives server restart.
 
-**Exit criteria:** create user, seed mock, fetch report twice with same data (survives server restart).
+### Phase 1b — Backboard ✅
 
-### Phase 1b — Backboard
+| Step | Status |
+|------|--------|
+| `BACKBOARD_API_KEY` + `BACKBOARD_ASSISTANT_ID` in `.env` | ✅ |
+| `backend/src/env.js` loads dotenv before `config.js` | ✅ |
+| `backboard.js` + `coachTools.js` + tool loop | ✅ |
+| `POST /coach/message` + `coach_sessions` | ✅ |
+| Upload research doc to assistant (optional) | ⏳ |
 
-1. `BACKBOARD_API_KEY` in `.env`
-2. Create assistant once (script or first-run)
-3. `coach.js` — send message, handle tool calls by delegating to domain routes
-4. Upload research markdown to assistant documents (optional script)
+**Exit criteria:** met — coach answers grounded in tool JSON (e.g. RBC Visa $95.29/mo for alex).
 
-**Exit criteria:** `POST .../coach/message` “Which debt hurts me most?” returns answer grounded in tool JSON.
+### Phase 2 — Frontend ✅
 
-### Phase 2 — Frontend wire-up
+| Step | Status |
+|------|--------|
+| `frontend/` Vite + React | ✅ |
+| CORS in `app.js` (`FRONTEND_ORIGIN`) | ✅ |
+| Vite dev proxy `/api` → `:3001` | ✅ |
+| Black Hole Report card | ✅ |
+| Coach chat → `POST /coach/message` | ✅ |
+| Demo onboarding (persona + tone) | ✅ |
+| `localStorage` user id + “New demo” reset | ✅ |
 
-1. Merge static + API in one server **or** CORS from `app.js`
-2. Black Hole Report card UI
-3. Chat panel → coach endpoint
+**Exit criteria:** met — full demo in browser without `curl`.
 
 ### Phase 3 — ElevenLabs + demo polish
 
 1. Webhook tool endpoints for ConvAI
 2. Voice summary of top black hole
-3. `eval/scenarios.yaml` — 5 scripts, run in CI or manual checklist
+3. Run `eval/scenarios.yaml` manually or in CI
 
 ---
 
 ## Environment variables
 
 ```env
-PORT=3001
+API_PORT=3001
+API_BASE_URL=http://localhost:3001
+FRONTEND_ORIGIN=http://localhost:5173
 DATABASE_PATH=./backend/data/app.db
 BACKBOARD_API_KEY=
 BACKBOARD_ASSISTANT_ID=
 ELEVENLABS_API_KEY=
 ```
 
-Run the API with `npm run dev` or `npm start` (port `3001` by default).
+Copy `.env.example` → `.env`. API loads via `backend/src/env.js` on boot.
+
+Frontend optional override: `frontend/.env` with `VITE_API_URL=http://localhost:3001` if not using the Vite proxy.
 
 ---
 
-## Compliance (bake in from day one)
+## Compliance
 
-- Every financial response includes `disclaimer` string.
-- System prompt: non-judgmental, no guaranteed score/tax outcomes.
-- `guardrails.js` (later): strip “guaranteed” language; append disclaimer if missing.
-
----
-
-## What we are not building in the backend first
-
-- Live bank aggregation (Flinks/Plaid) — adapter stub only
-- Full tax filing or CRA integration — one rule-based nudge max
-- Stock picking / trading
-- User auth / OAuth — opaque `userId` UUID is enough for demo
+- ✅ Financial responses include `disclaimer` string (API + UI)
+- Backboard assistant: non-judgmental, call tools for numbers, not licensed advice
+- `guardrails.js` — later
 
 ---
 
-## Success metrics for “backend done enough”
+## Success metrics
 
-- [ ] Black hole report for 3 personas returns different rankings
-- [ ] Math covered by a few unit tests (interest, ranking order)
-- [ ] Coach message triggers tool call and matches direct API numbers
-- [ ] `eval/scenarios.yaml` — at least 5 paths documented
-- [ ] README lists `curl` examples for demo rehearsal
+- [x] Black hole report for 3 personas returns different rankings
+- [x] Math covered by unit tests
+- [x] Coach message matches direct API numbers
+- [x] Browser demo: report + chat without curl
+- [x] `eval/scenarios.yaml` — 6 scenarios documented
 
 ---
 
-## Next command after reading this
+## Quick reference
 
 ```bash
 npm install
-npm run dev          # API on :3001
+cd frontend && npm install && cd ..
+npm run dev:all
+# → http://localhost:5173
+
+npm test
+npm run backboard:check
+npm run build:web    # production static build
 ```
 
-See `backend/src/` for scaffolded entrypoints and `backend/data/sampleClients.json` for persona data.
+See [README.md](../README.md) for curl and UI flows.
+
+---
+
+## Changelog (recent)
+
+| Date | Milestone |
+|------|-----------|
+| Phase 0–1 | Black-hole engine, REST API, SQLite persistence |
+| Phase 1b | `backboard.js`, `coachTools.js`, `POST /coach/message`, `coach_sessions` |
+| Phase 2 | `frontend/` Vite app, CORS, Black Hole Report + coach chat UI |
+| Phase 3 | ElevenLabs voice (planned) |

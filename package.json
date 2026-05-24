@@ -6,9 +6,16 @@
   "type": "module",
   "scripts": {
     "dev": "node backend/src/index.js",
+    "dev:api": "node backend/src/index.js",
+    "dev:web": "npm run dev --prefix frontend",
+    "dev:all": "concurrently -n api,web -c cyan,magenta \"npm run dev:api\" \"npm run dev:web\"",
     "start": "node backend/src/index.js",
+    "build:web": "npm run build --prefix frontend",
     "test": "node --test backend/src/**/*.test.js",
     "backboard:check": "node backend/scripts/check-backboard.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0",
