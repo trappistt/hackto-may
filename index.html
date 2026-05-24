@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HackTO May Demo Starter</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">HackTO May Starter</p>
+          <h1 id="productName">PitchForge</h1>
+          <p id="productPitch" class="lede">
+            Turn a rough hackathon idea into a crisp product pitch, demo plan, and judge-ready story.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#demo-builder">Tune demo</a>
+            <button class="button ghost" id="resetButton" type="button">Reset</button>
+          </div>
+        </div>
+        <div class="demo-panel" aria-label="Demo status">
+          <div class="panel-header">
+            <span class="status-dot"></span>
+            <span>Live demo snapshot</span>
+          </div>
+          <dl class="metrics">
+            <div>
+              <dt>Pitch length</dt>
+              <dd id="pitchLength">90 sec</dd>
+            </div>
+            <div>
+              <dt>Build mode</dt>
+              <dd id="buildMode">Prototype</dd>
+            </div>
+            <div>
+              <dt>Wow moment</dt>
+              <dd id="wowMoment">Instant summary</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="workspace" id="demo-builder">
+        <form class="editor" id="demoForm">
+          <label>
+            Product name
+            <input id="nameInput" name="name" type="text" maxlength="32" />
+          </label>
+          <label>
+            One-line pitch
+            <textarea id="pitchInput" name="pitch" rows="4" maxlength="180"></textarea>
+          </label>
+          <label>
+            Wow moment
+            <input id="wowInput" name="wow" type="text" maxlength="48" />
+          </label>
+          <button class="button primary" type="submit">Save snapshot</button>
+        </form>
+
+        <div class="timeline" aria-label="Demo flow">
+          <h2>Demo flow</h2>
+          <ol id="demoSteps"></ol>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
+

@@ -1,0 +1,19 @@
+{
+  "name": "hackto-may",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A zero-dependency hackathon demo starter.",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "hackathon",
+    "demo",
+    "starter"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+
