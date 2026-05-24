@@ -1,6 +1,6 @@
 # hackto-may
 
-Proactive financial copilot for Canadian professionals (25–45): escape **interest black holes** with a backend-first API, then chat via Backboard (voice via ElevenLabs next).
+Proactive financial copilot for Canadian professionals (25–45): escape **interest black holes** with a backend-first API, coach via Backboard, voice via ElevenLabs.
 
 ## Quick start (full demo UI)
 
@@ -20,9 +20,10 @@ Open **http://localhost:5173** — pick a demo persona, view the Black Hole Repo
 | `npm test` | Backend unit tests |
 | `npm run backboard:check` | Verify Backboard credentials |
 | `npm run elevenlabs:check` | Verify ElevenLabs TTS |
-| `npm run eval:local` | Run domain eval scenarios (no Backboard) |
+| `npm run convai:check` | Verify ConvAI webhook tools locally |
+| `npm run eval:local` | Run domain + voice eval scenarios (no Backboard) |
 
-Copy `.env.example` → `.env` for Backboard coach chat (`BACKBOARD_API_KEY`, `BACKBOARD_ASSISTANT_ID`).
+Copy `.env.example` → `.env` for Backboard (`BACKBOARD_*`) and ElevenLabs voice (`ELEVENLABS_API_KEY`). ConvAI agent: [docs/ELEVENLABS_CONVAI.md](docs/ELEVENLABS_CONVAI.md).
 
 ## Try the API (curl)
 
@@ -65,4 +66,4 @@ hackto-may/
 2. **Phase 1** ✅ SQLite persistence  
 3. **Phase 1b** ✅ Backboard coach + tools  
 4. **Phase 2** ✅ Frontend (`frontend/`)  
-5. **Phase 3** 🚧 ElevenLabs voice summary + ConvAI webhooks (wire agent in dashboard)  
+5. **Phase 3** ✅ ElevenLabs voice summary + ConvAI webhooks ([setup](docs/ELEVENLABS_CONVAI.md))  

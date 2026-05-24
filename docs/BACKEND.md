@@ -12,9 +12,20 @@ The **backend owns all numbers** (interest, rankings, balances). **Backboard** o
 | **1** — SQLite persistence | ✅ Done | Users, accounts, goals survive restart |
 | **1b** — Backboard coach | ✅ Done | `backboard.js` + `coachTools.js`; tool loop; `coach_sessions` |
 | **2** — Frontend | ✅ Done | Vite + React in `frontend/`; report + coach chat; CORS + proxy |
-| **3** — ElevenLabs | ✅ Core done | TTS voice summary, ConvAI webhooks, eval runner; ConvAI agent wiring is manual |
+| **3** — ElevenLabs | ✅ Done | TTS voice summary, ConvAI webhooks, `convai:check`, setup guide |
 
-**You are here:** Phase **3** complete for demo TTS; optional: ElevenLabs ConvAI agent + shadcn polish.
+**You are here:** **Demo-ready** — P0 + P1 + voice (Phase 3) are complete. **P2 is not required** for the hackathon demo (tax nudge, spend flags, bank package are post-demo). Optional: [shadcn/ui](https://ui.shadcn.com/) polish; ConvAI spoken agent: [ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md).
+
+**Pre-demo checklist:**
+
+| Step | Command / action |
+|------|------------------|
+| Install + env | `npm install`, `cd frontend && npm install`, copy `.env.example` → `.env` |
+| Backboard (coach) | `BACKBOARD_*` in `.env`, `npm run backboard:check` |
+| ElevenLabs (voice) | `ELEVENLABS_API_KEY` in `.env`, `npm run elevenlabs:check` (optional: browser TTS fallback) |
+| ConvAI tools (optional) | `npm run convai:check` — dashboard wiring in [ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md) |
+| Smoke tests | `npm test`, `npm run eval:local` |
+| Run demo | `npm run dev:all` → http://localhost:5173 |
 
 **First-time setup:**
 
@@ -36,8 +47,9 @@ npm run dev:all         # http://localhost:5173
 | `npm run build:web` | Production build → `frontend/dist/` |
 | `npm run backboard:check` | Verify Backboard key + assistant (direct API, not `/coach/message`) |
 | `npm run elevenlabs:check` | Verify ElevenLabs API key + TTS |
+| `npm run convai:check` | Verify ConvAI webhook tools locally (no ngrok) |
 | `npm run eval` | Run `backend/eval/scenarios.yaml` (needs Backboard for coach scenarios) |
-| `npm run eval:local` | Domain + API scenarios only (no Backboard) |
+| `npm run eval:local` | Domain + API + voice scenarios (no Backboard) |
 
 ---
 
@@ -71,12 +83,12 @@ npm run dev:all         # http://localhost:5173
 | P0 | Credit utilization | ✅ `GET /utilization` |
 | P1 | User + onboarding (persona, tone, stress) | ✅ SQLite `users` + demo setup UI |
 | P1 | Coach proxy (Backboard + tools) | ✅ API + chat panel |
-| P2 | Year-round tax nudge | ⏳ |
-| P2 | Spend flags, bank package | ⏳ |
+| P2 | Year-round tax nudge | ⏳ Not needed for demo |
+| P2 | Spend flags, bank package | ⏳ Not needed for demo |
 
-**Demo path (UI):** open http://localhost:5173 → pick persona (alex / sam / jordan) → view Black Hole Report → ask coach
+**Demo path (UI):** http://localhost:5173 → pick persona (alex / sam / jordan) → **Black Hole Report** → **Play voice summary** → coach chat → (optional) **Copy ID** for ElevenLabs ConvAI
 
-**Demo path (API):** `POST /users` → `POST /accounts/mock` → `GET /black-holes` → `POST /coach/message`
+**Demo path (API):** `POST /users` → `POST /accounts/mock` → `GET /black-holes` → `GET /voice/summary` → `POST /coach/message`
 
 ---
 
@@ -135,6 +147,7 @@ npm run dev:all         # http://localhost:5173
 hackto-may/
 ├── docs/
 │   ├── BACKEND.md
+│   ├── ELEVENLABS_CONVAI.md
 │   └── research/
 ├── frontend/
 │   ├── src/
@@ -166,6 +179,7 @@ hackto-may/
 │   │   └── db/
 │   ├── scripts/check-backboard.js
 │   ├── scripts/check-elevenlabs.js
+│   ├── scripts/check-convai-webhooks.js
 │   ├── scripts/run-eval.js
 │   └── data/sampleClients.json
 ├── package.json
@@ -291,14 +305,17 @@ DB path: `DATABASE_PATH` (default `./backend/data/app.db`). Schema in `backend/s
 | Voice summary script (`GET /voice/summary`, `voiceSummary.js`) | ✅ |
 | TTS playback (`POST /voice/speak`, `elevenlabs.js`) | ✅ |
 | UI “Play voice summary” (`VoiceSummary.jsx`, browser fallback) | ✅ |
-| `npm run eval` / `eval:local` for `scenarios.yaml` | ✅ |
+| UI **Copy ID** for ConvAI `user_id` | ✅ |
+| `npm run eval` / `eval:local` for `scenarios.yaml` (incl. voice) | ✅ |
 | `npm run elevenlabs:check` (TTS test; `override: true` on `.env`) | ✅ |
-| Wire ElevenLabs ConvAI agent in dashboard | ⏳ manual |
-| (Optional) shadcn/ui + Tailwind | ⏳ |
+| `npm run convai:check` (local tool execution) | ✅ |
+| ConvAI setup guide | ✅ [ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md) |
+| Wire ElevenLabs ConvAI agent in dashboard | Manual (follow guide) |
+| (Optional) shadcn/ui + Tailwind | Deferred |
 
-**ConvAI setup:** In the ElevenLabs agent, add server tools from `GET http://localhost:3001/api/webhooks/elevenlabs/tools`. Each tool POST must include `user_id` (demo UUID from the UI). For local dev, expose the API with ngrok so ElevenLabs can reach webhooks. Optional: `ELEVENLABS_WEBHOOK_SECRET` + header `X-Webhook-Secret`.
+**ConvAI setup:** See [docs/ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md) — `convai:check`, ngrok, tool catalog, **Copy ID** in UI.
 
-**Exit criteria:** met for TTS demo — voice reads top black hole in browser via ElevenLabs when `ELEVENLABS_API_KEY` is set.
+**Exit criteria:** met — TTS demo in browser; ConvAI tools verified locally; dashboard wiring documented.
 
 ---
 
@@ -386,7 +403,8 @@ Frontend optional: `frontend/.env` with `VITE_API_URL=http://localhost:3001` if 
 - [x] Math covered by unit tests (`blackHoleEngine.test.js`, `store.test.js`, `coachTools.test.js`)
 - [x] Coach message matches direct API numbers
 - [x] Browser demo: report + chat without curl
-- [x] `eval/scenarios.yaml` — 6 scenarios; `npm run eval:local` runs 4 without Backboard
+- [x] `eval/scenarios.yaml` — 7 scenarios; `npm run eval:local` runs 5 without Backboard
+- [x] `npm run convai:check` — ConvAI tools + voice script
 - [x] Env loading reliable (`loadEnv.js` + startup diagnostics)
 - [x] Voice summary TTS via `POST /voice/speak` + `elevenlabs:check`
 
@@ -403,6 +421,7 @@ npm run dev:all
 npm test
 npm run backboard:check
 npm run elevenlabs:check
+npm run convai:check
 npm run eval:local
 npm run build:web
 ```
@@ -419,4 +438,4 @@ See [README.md](../README.md) for curl and UI flows.
 | Phase 1b | `backboard.js`, `coachTools.js`, `POST /coach/message`, `coach_sessions` |
 | Phase 2 | `frontend/` Vite app, CORS, Black Hole Report + coach chat UI |
 | Env fix | `loadEnv.js` with `override: true`; `isBackboardConfigured()`; startup env path + Backboard status log |
-| Phase 3 | Voice summary API, ConvAI webhooks, eval runner, UI voice button, ElevenLabs troubleshooting |
+| Phase 3 closed | Voice summary API, ConvAI webhooks, `convai:check`, ELEVENLABS_CONVAI.md, Copy ID, voice eval, demo-ready docs |

@@ -69,6 +69,14 @@ export default function App() {
             <code className="user-id" title={userId}>
               {userId.slice(0, 8)}…
             </code>
+            <button
+              type="button"
+              className="ghost"
+              onClick={() => navigator.clipboard.writeText(userId)}
+              title="Copy full user ID for ElevenLabs ConvAI"
+            >
+              Copy ID
+            </button>
             <button type="button" className="ghost" onClick={resetDemo}>
               New demo
             </button>

@@ -14,6 +14,7 @@
     "test": "node --test backend/src/**/*.test.js",
     "backboard:check": "node backend/scripts/check-backboard.js",
     "elevenlabs:check": "node backend/scripts/check-elevenlabs.js",
+    "convai:check": "node backend/scripts/check-convai-webhooks.js",
     "eval": "node backend/scripts/run-eval.js",
     "eval:local": "node backend/scripts/run-eval.js --skip-coach"
   },

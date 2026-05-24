@@ -45,3 +45,10 @@ scenarios:
     user_message: "Any risks coming up on my debts?"
     assert:
       - mentions promo APR or CIBC card if data includes promoAprExpiresAt
+
+  - id: voice_summary_script
+    persona: alex
+    expect_voice: true
+    assert:
+      - mentions monthly interest or black hole
+      - mentions RBC or Visa

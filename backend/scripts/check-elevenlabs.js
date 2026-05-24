@@ -70,4 +70,6 @@ if (!ttsRes.ok) {
 
 const bytes = (await ttsRes.arrayBuffer()).byteLength;
 console.log(`✓ TTS test OK (${bytes} bytes mp3, voice ${voiceId})`);
-console.log("\nElevenLabs is working. Wire ConvAI webhooks to /api/webhooks/elevenlabs/tools/<name>");
+console.log("\nElevenLabs TTS is working.");
+console.log("Next: npm run convai:check  (local ConvAI tools)");
+console.log("Then: docs/ELEVENLABS_CONVAI.md  (dashboard + ngrok)");

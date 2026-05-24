@@ -14,6 +14,8 @@ import * as store from "../src/db/store.js";
 import { seedMockAccounts } from "../src/adapters/mockClient.js";
 import { runCoachTool } from "../src/services/coachTools.js";
 import { buildUtilizationSnapshot } from "../src/services/utilization.js";
+import { buildBlackHoleReport } from "../src/services/blackHoleEngine.js";
+import { buildBlackHoleVoiceScript } from "../src/services/voiceSummary.js";
 import { sendCoachMessage } from "../src/services/backboard.js";
 import { isBackboardConfigured } from "../src/config.js";
 
@@ -48,6 +50,11 @@ for (const scenario of scenarios) {
       const accounts = await (await import("../src/adapters/mockClient.js")).getAccounts(user.id);
       const out = buildUtilizationSnapshot(accounts);
       runAssertions(scenario.assert ?? [], JSON.stringify(out), out);
+    } else if (scenario.expect_voice) {
+      const accounts = await (await import("../src/adapters/mockClient.js")).getAccounts(user.id);
+      const report = buildBlackHoleReport(accounts);
+      const script = buildBlackHoleVoiceScript(report);
+      runAssertions(scenario.assert ?? [], script, { script });
     } else if (scenario.user_message) {
       if (!isBackboardConfigured() || skipCoach) {
         skipped += 1;
@@ -125,6 +132,18 @@ function runAssertions(assertions, text, data) {
       if (!/promo|cibc|expir/i.test(text)) {
         throw new Error("Expected promo/expiry mention");
       }
+      continue;
+    }
+
+    if (rule.includes("black hole")) {
+      if (!/black hole|interest/i.test(text)) {
+        throw new Error("Expected black hole / interest mention");
+      }
+      continue;
+    }
+
+    if (rule.includes("RBC") || rule.includes("Visa")) {
+      if (!/rbc|visa/i.test(text)) throw new Error("Expected RBC/Visa mention");
       continue;
     }
 
