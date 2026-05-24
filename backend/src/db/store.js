@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { getDb } from "./index.js";
 
 const VALID_TONES = new Set(["friend", "mom", "dad", "coach", "companion", "chief_of_staff"]);
@@ -57,7 +58,7 @@ const USER_SELECT = `SELECT id, persona, tone, stress_topics, display_name, date
  * }} data
  */
 export function createUser(data) {
-  const id = crypto.randomUUID();
+  const id = randomUUID();
   const persona = data.persona ?? "career_professional";
   const tone = VALID_TONES.has(data.tone) ? data.tone : "friend";
   const stressTopics = JSON.stringify(data.stressTopics ?? []);
@@ -218,7 +219,7 @@ export function getUserAccounts(userId) {
  * @param {object} payload
  */
 export function createGoal(userId, type, payload) {
-  const id = crypto.randomUUID();
+  const id = randomUUID();
   getDb()
     .prepare(`INSERT INTO goals (id, user_id, type, payload) VALUES (?, ?, ?, ?)`)
     .run(id, userId, type, JSON.stringify(payload));

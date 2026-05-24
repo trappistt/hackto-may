@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import express from "express";
 import * as mock from "./adapters/mockClient.js";
 import { buildBlackHoleReport } from "./services/blackHoleEngine.js";
@@ -52,7 +53,7 @@ app.post("/api/auth/google", (req, res) => {
   const name = req.body?.name?.trim() || null;
   const emailInput = req.body?.email?.trim().toLowerCase();
   const email =
-    emailInput || `demo-${crypto.randomUUID().slice(0, 8)}@hackto-may.local`;
+    emailInput || `demo-${randomUUID().slice(0, 8)}@hackto-may.local`;
 
   let user = store.getUserByEmail(email);
   let isNew = false;
