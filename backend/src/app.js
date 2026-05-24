@@ -2,9 +2,18 @@ import express from "express";
 import * as mock from "./adapters/mockClient.js";
 import { buildBlackHoleReport } from "./services/blackHoleEngine.js";
 import { buildUtilizationSnapshot } from "./services/utilization.js";
-import { config, isBackboardConfigured } from "./config.js";
+import { config, isBackboardConfigured, isElevenLabsConfigured } from "./config.js";
 import * as store from "./db/store.js";
 import { sendCoachMessage } from "./services/backboard.js";
+import { buildBlackHoleVoiceScript } from "./services/voiceSummary.js";
+import { synthesizeSpeech } from "./services/elevenlabs.js";
+import {
+  ELEVENLABS_TOOL_NAMES,
+  executeElevenLabsTool,
+  formatWebhookResult,
+  resolveUserIdFromWebhook,
+  verifyElevenLabsWebhook
+} from "./handlers/elevenlabsWebhook.js";
 
 const app = express();
 
@@ -19,7 +28,13 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, service: "hackto-may-api", persistence: "sqlite" });
+  res.json({
+    ok: true,
+    service: "hackto-may-api",
+    persistence: "sqlite",
+    backboard: isBackboardConfigured(),
+    elevenlabs: isElevenLabsConfigured()
+  });
 });
 
 app.post("/api/users", (req, res) => {
@@ -133,6 +148,124 @@ app.get("/api/users/:id/goals", (req, res) => {
   const user = store.getUser(req.params.id);
   if (!user) return res.status(404).json({ error: "User not found" });
   res.json({ goals: store.listGoals(req.params.id) });
+});
+
+app.get("/api/users/:id/voice/summary", async (req, res, next) => {
+  try {
+    const user = store.getUser(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const accounts = await mock.getAccounts(req.params.id);
+    if (!accounts.length) {
+      return res.status(400).json({
+        error: "No accounts linked",
+        hint: "POST /api/users/:id/accounts/mock with { personaKey: 'alex' }"
+      });
+    }
+
+    const report = buildBlackHoleReport(accounts);
+    const script = buildBlackHoleVoiceScript(report);
+    const top = report.ranked[0] ?? null;
+
+    res.json({
+      script,
+      topAccount: top
+        ? {
+            accountId: top.accountId,
+            name: top.name,
+            monthlyInterest: top.monthlyInterest
+          }
+        : null,
+      totalMonthlyInterestBurn: report.totalMonthlyInterestBurn,
+      elevenlabsConfigured: isElevenLabsConfigured(),
+      disclaimer: config.disclaimer
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/api/users/:id/voice/speak", async (req, res, next) => {
+  try {
+    const user = store.getUser(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (!isElevenLabsConfigured()) {
+      return res.status(501).json({
+        error: "ElevenLabs not configured",
+        hint: "Set ELEVENLABS_API_KEY in .env for voice playback"
+      });
+    }
+
+    const accounts = await mock.getAccounts(req.params.id);
+    if (!accounts.length) {
+      return res.status(400).json({ error: "No accounts linked" });
+    }
+
+    const report = buildBlackHoleReport(accounts);
+    const script = req.body?.script?.trim() || buildBlackHoleVoiceScript(report);
+    const { audioBase64, contentType } = await synthesizeSpeech(script);
+
+    res.json({
+      script,
+      audioBase64,
+      contentType,
+      disclaimer: config.disclaimer
+    });
+  } catch (err) {
+    if (err.status === 501) {
+      return res.status(501).json({ error: err.message });
+    }
+    next(err);
+  }
+});
+
+/** ConvAI server tools — configure in ElevenLabs agent with POST + user_id parameter */
+app.get("/api/webhooks/elevenlabs/tools", (_req, res) => {
+  const base = config.apiBaseUrl.replace(/\/$/, "");
+  res.json({
+    tools: ELEVENLABS_TOOL_NAMES.map((name) => ({
+      name,
+      method: "POST",
+      url: `${base}/api/webhooks/elevenlabs/tools/${name}`,
+      parameters: {
+        type: "object",
+        properties: {
+          user_id: {
+            type: "string",
+            description: "hackto-may user UUID from demo setup"
+          }
+        },
+        required: ["user_id"]
+      }
+    })),
+    hint: "Pass dynamic variable user_id at conversation start, or include user_id in tool parameters"
+  });
+});
+
+app.post("/api/webhooks/elevenlabs/tools/:toolName", async (req, res, next) => {
+  try {
+    if (!verifyElevenLabsWebhook(req)) {
+      return res.status(401).json({ error: "Invalid webhook secret" });
+    }
+
+    const userId = resolveUserIdFromWebhook(req.body);
+    if (!userId) {
+      return res.status(400).json({
+        error: "user_id is required",
+        hint: "Add user_id to tool parameters or conversation dynamic_variables"
+      });
+    }
+
+    const user = store.getUser(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const data = await executeElevenLabsTool(req.params.toolName, userId);
+    res.json(formatWebhookResult(data));
+  } catch (err) {
+    if (err.status === 404) return res.status(404).json({ error: err.message });
+    next(err);
+  }
 });
 
 app.post("/api/users/:id/coach/message", async (req, res, next) => {

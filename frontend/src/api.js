@@ -32,6 +32,14 @@ export const api = {
     request(`/api/users/${userId}/coach/message`, {
       method: "POST",
       body: JSON.stringify({ content })
+    }),
+
+  getVoiceSummary: (userId) => request(`/api/users/${userId}/voice/summary`),
+
+  speakVoiceSummary: (userId, script) =>
+    request(`/api/users/${userId}/voice/speak`, {
+      method: "POST",
+      body: JSON.stringify({ script })
     })
 };
 

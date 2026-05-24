@@ -7,7 +7,7 @@ import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-config({ path: resolve(root, ".env") });
+config({ path: resolve(root, ".env"), override: true });
 
 const apiKey = process.env.BACKBOARD_API_KEY?.trim();
 const assistantId = process.env.BACKBOARD_ASSISTANT_ID?.trim();

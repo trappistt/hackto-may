@@ -1,6 +1,6 @@
 import "./loadEnv.js";
 import { resolve } from "node:path";
-import { config, isBackboardConfigured } from "./config.js";
+import { config, isBackboardConfigured, isElevenLabsConfigured } from "./config.js";
 import app from "./app.js";
 import { initDb } from "./db/index.js";
 import { envFileExists, envFilePath } from "./loadEnv.js";
@@ -23,5 +23,13 @@ app.listen(config.port, () => {
     console.log(
       "Tip: if you ran `source .env` before filling keys, open a new terminal or run `unset BACKBOARD_API_KEY BACKBOARD_ASSISTANT_ID`"
     );
+  }
+
+  if (isElevenLabsConfigured()) {
+    console.log("ElevenLabs: configured (voice TTS enabled)");
+    console.log(`Voice summary: ${config.apiBaseUrl}/api/users/<id>/voice/summary`);
+    console.log(`ConvAI tools: ${config.apiBaseUrl}/api/webhooks/elevenlabs/tools`);
+  } else {
+    console.log("ElevenLabs: not configured — set ELEVENLABS_API_KEY in .env for voice playback");
   }
 });

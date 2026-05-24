@@ -12,10 +12,14 @@
     "start": "node backend/src/index.js",
     "build:web": "npm run build --prefix frontend",
     "test": "node --test backend/src/**/*.test.js",
-    "backboard:check": "node backend/scripts/check-backboard.js"
+    "backboard:check": "node backend/scripts/check-backboard.js",
+    "elevenlabs:check": "node backend/scripts/check-elevenlabs.js",
+    "eval": "node backend/scripts/run-eval.js",
+    "eval:local": "node backend/scripts/run-eval.js --skip-coach"
   },
   "devDependencies": {
-    "concurrently": "^9.2.0"
+    "concurrently": "^9.2.0",
+    "yaml": "^2.8.0"
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0",

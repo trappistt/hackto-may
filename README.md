@@ -19,6 +19,8 @@ Open **http://localhost:5173** — pick a demo persona, view the Black Hole Repo
 | `npm run dev:web` | UI only (proxies `/api` to the API) |
 | `npm test` | Backend unit tests |
 | `npm run backboard:check` | Verify Backboard credentials |
+| `npm run elevenlabs:check` | Verify ElevenLabs TTS |
+| `npm run eval:local` | Run domain eval scenarios (no Backboard) |
 
 Copy `.env.example` → `.env` for Backboard coach chat (`BACKBOARD_API_KEY`, `BACKBOARD_ASSISTANT_ID`).
 
@@ -63,4 +65,4 @@ hackto-may/
 2. **Phase 1** ✅ SQLite persistence  
 3. **Phase 1b** ✅ Backboard coach + tools  
 4. **Phase 2** ✅ Frontend (`frontend/`)  
-5. **Phase 3** (next): ElevenLabs voice + demo polish  
+5. **Phase 3** 🚧 ElevenLabs voice summary + ConvAI webhooks (wire agent in dashboard)  

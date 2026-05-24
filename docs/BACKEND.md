@@ -2,7 +2,7 @@
 
 Architecture and phased delivery for **hackto-may** ([github.com/trappistt/hackto-may](https://github.com/trappistt/hackto-may)).
 
-The **backend owns all numbers** (interest, rankings, balances). **Backboard** owns coach chat; **ElevenLabs** (Phase 3) will own voice. The **frontend** (`frontend/`) is a thin client over `/api/*` only.
+The **backend owns all numbers** (interest, rankings, balances). **Backboard** owns coach chat; **ElevenLabs** owns voice (TTS + optional ConvAI webhooks). The **frontend** (`frontend/`) is a thin client over `/api/*` only.
 
 ## Current status
 
@@ -12,16 +12,16 @@ The **backend owns all numbers** (interest, rankings, balances). **Backboard** o
 | **1** — SQLite persistence | ✅ Done | Users, accounts, goals survive restart |
 | **1b** — Backboard coach | ✅ Done | `backboard.js` + `coachTools.js`; tool loop; `coach_sessions` |
 | **2** — Frontend | ✅ Done | Vite + React in `frontend/`; report + coach chat; CORS + proxy |
-| **3** — ElevenLabs | ⏳ Not started | |
+| **3** — ElevenLabs | ✅ Core done | TTS voice summary, ConvAI webhooks, eval runner; ConvAI agent wiring is manual |
 
-**You are here:** Phase **3** — ElevenLabs voice + demo polish.
+**You are here:** Phase **3** complete for demo TTS; optional: ElevenLabs ConvAI agent + shadcn polish.
 
 **First-time setup:**
 
 ```bash
 npm install
 cd frontend && npm install && cd ..
-cp .env.example .env    # add BACKBOARD_* for coach chat
+cp .env.example .env    # BACKBOARD_* (coach) + ELEVENLABS_API_KEY (voice)
 npm run dev:all         # http://localhost:5173
 ```
 
@@ -32,9 +32,12 @@ npm run dev:all         # http://localhost:5173
 | `npm run dev:all` | API `:3001` + UI `:5173` |
 | `npm run dev` | API only |
 | `npm run dev:web` | UI only (Vite proxies `/api` → `:3001`) |
-| `npm test` | 6 backend unit tests |
+| `npm test` | 8 backend unit tests |
 | `npm run build:web` | Production build → `frontend/dist/` |
 | `npm run backboard:check` | Verify Backboard key + assistant (direct API, not `/coach/message`) |
+| `npm run elevenlabs:check` | Verify ElevenLabs API key + TTS |
+| `npm run eval` | Run `backend/eval/scenarios.yaml` (needs Backboard for coach scenarios) |
+| `npm run eval:local` | Domain + API scenarios only (no Backboard) |
 
 ---
 
@@ -48,7 +51,7 @@ npm run dev:all         # http://localhost:5173
 | **Persistence** | SQLite via `better-sqlite3` | `backend/data/app.db` |
 | **Mock bank data** | JSON personas | `backend/data/sampleClients.json` |
 | **Coach** | Backboard REST (`/threads/messages`, tool loop) | `backend/src/services/backboard.js` |
-| **Voice** (planned) | ElevenLabs | Phase 3 |
+| **Voice** | ElevenLabs TTS + ConvAI webhooks | `elevenlabs.js`, `/api/webhooks/elevenlabs/tools/*` |
 | **Config** | dotenv, repo-root `.env` | `backend/src/loadEnv.js` |
 | **Dev** | `concurrently`, Vite proxy, CORS | root `package.json`, `frontend/vite.config.js` |
 
@@ -82,7 +85,7 @@ npm run dev:all         # http://localhost:5173
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │  frontend/ (Vite + React) — :5173                           │
-│  • DemoSetup, BlackHoleReport, CoachChat                    │
+│  • DemoSetup, BlackHoleReport, VoiceSummary, CoachChat      │
 │  • localStorage user id · Vite proxy /api → :3001           │
 └────────────────────────────┬────────────────────────────────┘
                              │ HTTP /api/*
@@ -97,7 +100,8 @@ npm run dev:all         # http://localhost:5173
 │  Domain services        │     │  Integrations                 │
 │  • blackHoleEngine.js   │     │  • backboard.js ✅            │
 │  • utilization.js       │     │  • coachTools.js ✅           │
-│  • coachTools (local)   │     │  • elevenlabs.js (Phase 3)  │
+│  • coachTools (local)   │     │  • elevenlabs.js ✅         │
+│  • voiceSummary.js ✅   │     │  • ConvAI webhooks ✅       │
 └────────────┬────────────┘     └───────────────────────────────┘
              │
 ┌────────────▼────────────┐
@@ -138,7 +142,8 @@ hackto-may/
 │   │   └── components/
 │   │       ├── DemoSetup.jsx
 │   │       ├── BlackHoleReport.jsx
-│   │       └── CoachChat.jsx
+│   │       ├── CoachChat.jsx
+│   │       └── VoiceSummary.jsx
 │   ├── vite.config.js      # proxy /api → :3001
 │   └── package.json
 ├── backend/
@@ -153,9 +158,15 @@ hackto-may/
 │   │   │   ├── blackHoleEngine.js
 │   │   │   ├── utilization.js
 │   │   │   ├── backboard.js
-│   │   │   └── coachTools.js
+│   │   │   ├── coachTools.js
+│   │   │   ├── elevenlabs.js
+│   │   │   └── voiceSummary.js
+│   │   ├── handlers/
+│   │   │   └── elevenlabsWebhook.js
 │   │   └── db/
 │   ├── scripts/check-backboard.js
+│   ├── scripts/check-elevenlabs.js
+│   ├── scripts/run-eval.js
 │   └── data/sampleClients.json
 ├── package.json
 ├── .env.example
@@ -183,6 +194,10 @@ Base: `http://localhost:3001/api` (or proxied at `http://localhost:5173/api` in 
 | `POST` | `/users/:id/goals` | persisted |
 | `GET` | `/users/:id/goals` | |
 | `POST` | `/users/:id/coach/message` | `{ content }` → `{ reply, threadId, disclaimer }` |
+| `GET` | `/users/:id/voice/summary` | Script + top black hole (no TTS) |
+| `POST` | `/users/:id/voice/speak` | `{ script? }` → `{ audioBase64, contentType }` (501 if no API key) |
+| `GET` | `/webhooks/elevenlabs/tools` | ConvAI webhook URLs + schemas |
+| `POST` | `/webhooks/elevenlabs/tools/:name` | ElevenLabs server tool (`user_id` param) |
 
 `persona` (user record): `career_professional` | `high_loan` | `recovering`  
 `tone`: `coach` | `companion` | `chief_of_staff`  
@@ -267,12 +282,23 @@ DB path: `DATABASE_PATH` (default `./backend/data/app.db`). Schema in `backend/s
 
 **Exit criteria:** met — full demo in browser without `curl`.
 
-### Phase 3 — ElevenLabs + demo polish
+### Phase 3 — ElevenLabs + demo polish ✅
 
-1. Webhook tool endpoints for ConvAI
-2. Voice summary of top black hole
-3. Run `eval/scenarios.yaml` manually or in CI
-4. (Optional) shadcn/ui + Tailwind in `frontend/`
+| Step | Status |
+|------|--------|
+| ConvAI webhook tools (`POST /api/webhooks/elevenlabs/tools/:name`) | ✅ |
+| Tool catalog (`GET /api/webhooks/elevenlabs/tools`) | ✅ |
+| Voice summary script (`GET /voice/summary`, `voiceSummary.js`) | ✅ |
+| TTS playback (`POST /voice/speak`, `elevenlabs.js`) | ✅ |
+| UI “Play voice summary” (`VoiceSummary.jsx`, browser fallback) | ✅ |
+| `npm run eval` / `eval:local` for `scenarios.yaml` | ✅ |
+| `npm run elevenlabs:check` (TTS test; `override: true` on `.env`) | ✅ |
+| Wire ElevenLabs ConvAI agent in dashboard | ⏳ manual |
+| (Optional) shadcn/ui + Tailwind | ⏳ |
+
+**ConvAI setup:** In the ElevenLabs agent, add server tools from `GET http://localhost:3001/api/webhooks/elevenlabs/tools`. Each tool POST must include `user_id` (demo UUID from the UI). For local dev, expose the API with ngrok so ElevenLabs can reach webhooks. Optional: `ELEVENLABS_WEBHOOK_SECRET` + header `X-Webhook-Secret`.
+
+**Exit criteria:** met for TTS demo — voice reads top black hole in browser via ElevenLabs when `ELEVENLABS_API_KEY` is set.
 
 ---
 
@@ -286,6 +312,9 @@ DATABASE_PATH=./backend/data/app.db
 BACKBOARD_API_KEY=
 BACKBOARD_ASSISTANT_ID=
 ELEVENLABS_API_KEY=
+ELEVENLABS_VOICE_ID=EXAVITQu4vr4xnSDxMaL
+ELEVENLABS_MODEL_ID=eleven_flash_v2_5
+ELEVENLABS_WEBHOOK_SECRET=
 ```
 
 Copy `.env.example` → `.env`. Loaded from **repo root** by `backend/src/loadEnv.js` (`override: true`).
@@ -295,7 +324,31 @@ After editing `.env`, **restart** the API. On startup you should see:
 ```text
 Env file: /path/to/hackto-may/.env (found)
 Backboard: configured (coach enabled)
+ElevenLabs: configured (voice TTS enabled)
 ```
+
+### Troubleshooting: ElevenLabs
+
+**Verify TTS (what the demo UI uses):**
+
+```bash
+npm run elevenlabs:check
+```
+
+Success ends with `✓ TTS test OK (... bytes mp3)`. The script loads repo-root `.env` with **`override: true`** (same as the API). It may skip the voices list if your key lacks `voices_read` — that is fine; TTS is the real check.
+
+**“ELEVENLABS_API_KEY is missing in .env”** but the key is in the file:
+
+1. **Save** `.env` and run the check again (the script prints the path it read).
+2. **Stale shell export** — `unset ELEVENLABS_API_KEY` or open a new terminal, then `npm run elevenlabs:check`.
+3. Variable name must be exactly `ELEVENLABS_API_KEY` (no spaces around `=`).
+
+**UI plays browser voice, not ElevenLabs:** API not restarted after adding the key, or `GET /api/health` shows `"elevenlabs": false`. Restart `npm run dev:all`.
+
+| Variable | Where to get it |
+|----------|-----------------|
+| `ELEVENLABS_API_KEY` | [ElevenLabs profile](https://elevenlabs.io/app/settings/api-keys) |
+| `ELEVENLABS_VOICE_ID` | Voice library (default `EXAVITQu4vr4xnSDxMaL` in `.env.example`) |
 
 ### Troubleshooting: “Backboard not configured”
 
@@ -333,8 +386,9 @@ Frontend optional: `frontend/.env` with `VITE_API_URL=http://localhost:3001` if 
 - [x] Math covered by unit tests (`blackHoleEngine.test.js`, `store.test.js`, `coachTools.test.js`)
 - [x] Coach message matches direct API numbers
 - [x] Browser demo: report + chat without curl
-- [x] `eval/scenarios.yaml` — 6 scenarios documented
+- [x] `eval/scenarios.yaml` — 6 scenarios; `npm run eval:local` runs 4 without Backboard
 - [x] Env loading reliable (`loadEnv.js` + startup diagnostics)
+- [x] Voice summary TTS via `POST /voice/speak` + `elevenlabs:check`
 
 ---
 
@@ -348,6 +402,8 @@ npm run dev:all
 
 npm test
 npm run backboard:check
+npm run elevenlabs:check
+npm run eval:local
 npm run build:web
 ```
 
@@ -363,4 +419,4 @@ See [README.md](../README.md) for curl and UI flows.
 | Phase 1b | `backboard.js`, `coachTools.js`, `POST /coach/message`, `coach_sessions` |
 | Phase 2 | `frontend/` Vite app, CORS, Black Hole Report + coach chat UI |
 | Env fix | `loadEnv.js` with `override: true`; `isBackboardConfigured()`; startup env path + Backboard status log |
-| Phase 3 | ElevenLabs voice (planned) |
+| Phase 3 | Voice summary API, ConvAI webhooks, eval runner, UI voice button, ElevenLabs troubleshooting |

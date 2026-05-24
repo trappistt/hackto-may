@@ -62,7 +62,7 @@
         "id": "card-cibc",
         "name": "CIBC Dividend",
         "type": "credit_card",
-        "balance": 4100,
+        "balance": 6200,
         "apr": 0.1199,
         "minPayment": 82,
         "limit": 8000,

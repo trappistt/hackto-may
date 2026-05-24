@@ -3,6 +3,7 @@ import { api, STORAGE_KEY } from "./api.js";
 import DemoSetup from "./components/DemoSetup.jsx";
 import BlackHoleReport from "./components/BlackHoleReport.jsx";
 import CoachChat from "./components/CoachChat.jsx";
+import VoiceSummary from "./components/VoiceSummary.jsx";
 
 export default function App() {
   const [userId, setUserId] = useState(() => localStorage.getItem(STORAGE_KEY));
@@ -80,11 +81,14 @@ export default function App() {
           <DemoSetup onReady={handleSetup} loading={loading} error={setupError} />
         ) : (
           <>
-            <BlackHoleReport
-              report={report}
-              loading={loading && !report}
-              onRefresh={() => loadReport(userId)}
-            />
+            <div className="main-column">
+              <BlackHoleReport
+                report={report}
+                loading={loading && !report}
+                onRefresh={() => loadReport(userId)}
+              />
+              <VoiceSummary userId={userId} report={report} />
+            </div>
             <CoachChat
               userId={userId}
               onSend={(content) => api.sendCoachMessage(userId, content)}
