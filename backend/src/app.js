@@ -3,7 +3,12 @@ import * as mock from "./adapters/mockClient.js";
 import { buildBlackHoleReport } from "./services/blackHoleEngine.js";
 import { buildTrends } from "./services/trends.js";
 import { buildUtilizationSnapshot } from "./services/utilization.js";
-import { config, isBackboardConfigured, isElevenLabsConfigured } from "./config.js";
+import {
+  config,
+  isBackboardConfigured,
+  isCorsOriginAllowed,
+  isElevenLabsConfigured
+} from "./config.js";
 import * as store from "./db/store.js";
 import { sendCoachMessage } from "./services/backboard.js";
 import { buildBlackHoleVoiceScript } from "./services/voiceSummary.js";
@@ -19,7 +24,11 @@ import {
 const app = express();
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", config.corsOrigin);
+  const origin = req.headers.origin;
+  if (origin && isCorsOriginAllowed(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin.replace(/\/+$/, ""));
+    res.setHeader("Vary", "Origin");
+  }
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.sendStatus(204);
