@@ -1,0 +1,101 @@
+{
+  "alex": {
+    "label": "High-CC Alex",
+    "description": "34, three cards, essentials on credit, minimum payments",
+    "accounts": [
+      {
+        "id": "card-rbc-visa",
+        "name": "RBC Visa",
+        "type": "credit_card",
+        "balance": 5200,
+        "apr": 0.2199,
+        "minPayment": 104,
+        "limit": 6000,
+        "dueDay": 12
+      },
+      {
+        "id": "card-td-cashback",
+        "name": "TD Cash Back",
+        "type": "credit_card",
+        "balance": 2800,
+        "apr": 0.1999,
+        "minPayment": 56,
+        "limit": 5000,
+        "dueDay": 3
+      },
+      {
+        "id": "card-amex",
+        "name": "Amex Cobalt",
+        "type": "credit_card",
+        "balance": 1900,
+        "apr": 0.2099,
+        "minPayment": 38,
+        "limit": 4000,
+        "dueDay": 21
+      }
+    ]
+  },
+  "sam": {
+    "label": "High-loan Sam",
+    "description": "38, LOC + auto + cards, promo APR expiring",
+    "accounts": [
+      {
+        "id": "loc-scotia",
+        "name": "Scotia LOC",
+        "type": "line_of_credit",
+        "balance": 14000,
+        "apr": 0.0899,
+        "minPayment": 210,
+        "limit": 25000,
+        "dueDay": 1
+      },
+      {
+        "id": "loan-auto",
+        "name": "Auto loan",
+        "type": "installment",
+        "balance": 18500,
+        "apr": 0.0699,
+        "minPayment": 385,
+        "dueDay": 15
+      },
+      {
+        "id": "card-cibc",
+        "name": "CIBC Dividend",
+        "type": "credit_card",
+        "balance": 4100,
+        "apr": 0.1199,
+        "minPayment": 82,
+        "limit": 8000,
+        "dueDay": 8,
+        "promoAprExpiresAt": "2026-08-01",
+        "aprAfterPromo": 0.2299
+      }
+    ]
+  },
+  "jordan": {
+    "label": "Recovering Jordan",
+    "description": "31, improving habits, lower balances",
+    "accounts": [
+      {
+        "id": "card-bmo",
+        "name": "BMO CashBack",
+        "type": "credit_card",
+        "balance": 1200,
+        "apr": 0.1999,
+        "minPayment": 35,
+        "limit": 3500,
+        "dueDay": 18
+      },
+      {
+        "id": "card-pc",
+        "name": "PC Financial Mastercard",
+        "type": "credit_card",
+        "balance": 650,
+        "apr": 0.2099,
+        "minPayment": 20,
+        "limit": 2000,
+        "dueDay": 25
+      }
+    ]
+  }
+}

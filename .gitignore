@@ -6,3 +6,7 @@ coverage/
 .env.*
 !.env.example
 
+# SQLite (Phase 1)
+backend/data/*.db
+backend/data/*.db-*
+

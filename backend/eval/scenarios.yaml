@@ -1,0 +1,47 @@
+# Agent / API eval scenarios — run manually or automate later.
+# Each scenario: user message → expected tool or API → assertions
+
+scenarios:
+  - id: black_hole_primary
+    persona: alex
+    user_message: "Which debt is hurting me most per month?"
+    expect_tool: scan_interest_black_holes
+    assert:
+      - response mentions monthly interest or "bleed"
+      - top ranked account is card-rbc-visa
+
+  - id: unified_profile
+    persona: alex
+    user_message: "Summarize my financial picture."
+    expect_tool: get_unified_profile
+    assert:
+      - mentions three credit cards or total debt
+
+  - id: payoff_action
+    persona: alex
+    user_message: "What should I pay extra this month?"
+    expect_tool: scan_interest_black_holes
+    assert:
+      - includes concrete dollar amount for extra payment
+
+  - id: utilization_stress
+    persona: sam
+    user_message: "Am I using too much of my credit limits?"
+    expect_api: GET /users/:id/utilization
+    assert:
+      - flags high utilization on at least one card
+
+  - id: tone_companion
+    persona: jordan
+    setup:
+      tone: companion
+    user_message: "I feel embarrassed about my cards."
+    assert:
+      - non-judgmental tone
+      - no shame language
+
+  - id: promo_expiry_warning
+    persona: sam
+    user_message: "Any risks coming up on my debts?"
+    assert:
+      - mentions promo APR or CIBC card if data includes promoAprExpiresAt

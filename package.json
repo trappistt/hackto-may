@@ -2,18 +2,23 @@
   "name": "hackto-may",
   "version": "0.1.0",
   "private": true,
-  "description": "A zero-dependency hackathon demo starter.",
+  "description": "Proactive financial copilot — interest black hole scanner + coach API.",
   "type": "module",
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js"
+    "dev": "node backend/src/index.js",
+    "start": "node backend/src/index.js",
+    "test": "node --test backend/src/**/*.test.js",
+    "backboard:check": "node backend/scripts/check-backboard.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0"
   },
   "keywords": [
     "hackathon",
-    "demo",
-    "starter"
+    "fintech",
+    "ai-agent"
   ],
-  "author": "",
   "license": "MIT"
 }
-
