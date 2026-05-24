@@ -56,7 +56,7 @@ hackto-may/
 | Path | Purpose |
 |------|---------|
 | [docs/BACKEND.md](docs/BACKEND.md) | Architecture and phased build plan |
-| [frontend/src/](frontend/src/) | Black hole report + coach chat |
+| [frontend/src/](frontend/src/) | shadcn/ui demo — black hole report + coach + voice |
 | [backend/src/](backend/src/) | Express API and interest black-hole engine |
 | [backend/data/sampleClients.json](backend/data/sampleClients.json) | Demo personas (alex, sam, jordan) |
 

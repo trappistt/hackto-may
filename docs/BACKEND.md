@@ -1,8 +1,8 @@
 # Backend build plan
 
-Architecture and phased delivery for **hackto-may** ([github.com/trappistt/hackto-may](https://github.com/trappistt/hackto-may)).
+Architecture and phased delivery for **Moneytor** (repo: [hackto-may](https://github.com/trappistt/hackto-may)).
 
-The **backend owns all numbers** (interest, rankings, balances). **Backboard** owns coach chat; **ElevenLabs** owns voice (TTS + optional ConvAI webhooks). The **frontend** (`frontend/`) is a thin client over `/api/*` only.
+The **backend owns all numbers** (interest, rankings, balances). **Backboard** owns coach chat; **ElevenLabs** owns voice (TTS + optional ConvAI webhooks). The **frontend** (`frontend/`) is a thin client over `/api/*` only — responsive web app (desktop + mobile), not a phone-frame mockup.
 
 ## Current status
 
@@ -11,10 +11,10 @@ The **backend owns all numbers** (interest, rankings, balances). **Backboard** o
 | **0** — Domain + REST API | ✅ Done | Black-hole engine, mock personas, all P0 routes |
 | **1** — SQLite persistence | ✅ Done | Users, accounts, goals survive restart |
 | **1b** — Backboard coach | ✅ Done | `backboard.js` + `coachTools.js`; tool loop; `coach_sessions` |
-| **2** — Frontend | ✅ Done | Vite + React in `frontend/`; report + coach chat; CORS + proxy |
+| **2** — Frontend | ✅ Done | Moneytor UI, onboarding flow, dashboard; shadcn + Tailwind; CORS + proxy |
 | **3** — ElevenLabs | ✅ Done | TTS voice summary, ConvAI webhooks, `convai:check`, setup guide |
 
-**You are here:** **Demo-ready** — P0 + P1 + voice (Phase 3) are complete. **P2 is not required** for the hackathon demo (tax nudge, spend flags, bank package are post-demo). Optional: [shadcn/ui](https://ui.shadcn.com/) polish; ConvAI spoken agent: [ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md).
+**You are here:** **Demo-ready** — P0 + P1 + voice (Phase 3) + shadcn UI polish are complete. **P2 is not required** for the hackathon demo. ConvAI spoken agent: [ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md).
 
 **Pre-demo checklist:**
 
@@ -57,7 +57,7 @@ npm run dev:all         # http://localhost:5173
 
 | Layer | Technology | Location |
 |-------|------------|----------|
-| **UI** | React 19, Vite 6, custom CSS | `frontend/` |
+| **UI** | React 19, Vite 6, shadcn/ui, Tailwind | `frontend/` |
 | **API** | Node.js, Express 5, JavaScript (ESM) | `backend/src/app.js` |
 | **Domain** | Pure JS modules (no I/O in engine) | `backend/src/services/` |
 | **Persistence** | SQLite via `better-sqlite3` | `backend/data/app.db` |
@@ -69,7 +69,7 @@ npm run dev:all         # http://localhost:5173
 
 **Intentionally not in stack (for now):** Next.js, TypeScript, OAuth, live bank APIs (Flinks/Plaid stub only).
 
-**Optional later:** [shadcn/ui](https://ui.shadcn.com/) + Tailwind in `frontend/` only (UI polish; backend unchanged).
+**UI (Moneytor):** [shadcn/ui](https://ui.shadcn.com/) + Tailwind + [blocks.so](https://blocks.so/) patterns — Inter / Inter Display, white background, charcoal text/buttons, logo at `frontend/public/moneytor-logo.png`.
 
 ---
 
@@ -81,14 +81,27 @@ npm run dev:all         # http://localhost:5173
 | P0 | Interest Black Hole Report | ✅ `GET /black-holes` + UI card |
 | P0 | Payoff recommendation | ✅ in black-hole `recommendation` field |
 | P0 | Credit utilization | ✅ `GET /utilization` |
-| P1 | User + onboarding (persona, tone, stress) | ✅ SQLite `users` + demo setup UI |
+| P1 | User + onboarding (auth, profile, bank, tone) | ✅ Multi-step UI + SQLite profile fields |
 | P1 | Coach proxy (Backboard + tools) | ✅ API + chat panel |
 | P2 | Year-round tax nudge | ⏳ Not needed for demo |
 | P2 | Spend flags, bank package | ⏳ Not needed for demo |
 
-**Demo path (UI):** http://localhost:5173 → pick persona (alex / sam / jordan) → **Black Hole Report** → **Play voice summary** → coach chat → (optional) **Copy ID** for ElevenLabs ConvAI
+**Demo path (UI):** http://localhost:5173 → sign up / Google → name & DOB → welcome → connect bank → tone (Friend / Mom / Dad) → **dashboard** (report + voice + coach; responsive desktop & mobile)
 
-**Demo path (API):** `POST /users` → `POST /accounts/mock` → `GET /black-holes` → `GET /voice/summary` → `POST /coach/message`
+**Demo path (API):** `POST /auth/google` → `PATCH /users/:id` (profile, tone, `onboardingComplete`) → `POST /accounts/mock` → `GET /black-holes` → `POST /coach/message`
+
+### Onboarding flow (UI)
+
+| Step | Screen | API |
+|------|--------|-----|
+| 1 | Sign up / Log in + Continue with Google (demo) | `POST /api/auth/google` |
+| 2 | Name + date of birth | `PATCH /api/users/:id` |
+| 3 | Welcome + app explainer | — |
+| 4 | Connect bank (mock → alex persona) | `POST /api/users/:id/accounts/mock` |
+| 5 | Coach tone: Friend / Mom / Dad | `PATCH /api/users/:id` `{ tone, onboardingComplete: true }` |
+| 6 | Dashboard | black holes, voice, coach |
+
+`localStorage` key: `hackto_user_id`. Resume incomplete onboarding on reload. **Restart API** after pulling auth changes (`npm run dev:all`).
 
 ---
 
@@ -96,15 +109,16 @@ npm run dev:all         # http://localhost:5173
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│  frontend/ (Vite + React) — :5173                           │
-│  • DemoSetup, BlackHoleReport, VoiceSummary, CoachChat      │
-│  • localStorage user id · Vite proxy /api → :3001           │
+│  frontend/ (Vite + React) — :5173 — Moneytor brand          │
+│  • OnboardingFlow → Dashboard (BlackHole, Voice, Coach)       │
+│  • localStorage hackto_user_id · Vite proxy /api → :3001    │
 └────────────────────────────┬────────────────────────────────┘
                              │ HTTP /api/*
 ┌────────────────────────────▼────────────────────────────────┐
 │  HTTP API (Express) — backend/src/app.js                    │
 │  • CORS: FRONTEND_ORIGIN (default http://localhost:5173)    │
-│  • Auth: none (opaque user UUID)                            │
+│  • Auth: demo POST /auth/google (no real OAuth yet)         │
+│  • Session: opaque user UUID in localStorage                │
 │  • Boot: loadEnv.js → config → app (see below)              │
 └────────────┬───────────────────────────────┬────────────────┘
              │                               │
@@ -150,15 +164,17 @@ hackto-may/
 │   ├── ELEVENLABS_CONVAI.md
 │   └── research/
 ├── frontend/
+│   ├── public/moneytor-logo.png
 │   ├── src/
-│   │   ├── App.jsx, App.css, api.js, main.jsx
+│   │   ├── App.jsx, index.css, api.js, main.jsx
+│   │   ├── lib/utils.js
 │   │   └── components/
-│   │       ├── DemoSetup.jsx
-│   │       ├── BlackHoleReport.jsx
-│   │       ├── CoachChat.jsx
-│   │       └── VoiceSummary.jsx
-│   ├── vite.config.js      # proxy /api → :3001
-│   └── package.json
+│   │       ├── ui/              # shadcn
+│   │       ├── onboarding/      # Auth, profile, welcome, bank, tone
+│   │       ├── AppShell.jsx, Dashboard.jsx, Logo.jsx
+│   │       ├── BlackHoleReport.jsx, CoachChat.jsx, VoiceSummary.jsx
+│   ├── tailwind.config.js, components.json
+│   └── vite.config.js           # proxy /api → :3001
 ├── backend/
 │   ├── src/
 │   │   ├── index.js        # entry: loadEnv → config → app
@@ -177,6 +193,7 @@ hackto-may/
 │   │   ├── handlers/
 │   │   │   └── elevenlabsWebhook.js
 │   │   └── db/
+│   │       ├── migrate.js    # ALTER users for profile/onboarding cols
 │   ├── scripts/check-backboard.js
 │   ├── scripts/check-elevenlabs.js
 │   ├── scripts/check-convai-webhooks.js
@@ -198,10 +215,11 @@ Base: `http://localhost:3001/api` (or proxied at `http://localhost:5173/api` in 
 | Method | Path | Notes |
 |--------|------|--------|
 | `GET` | `/health` | `{ ok, service, persistence: "sqlite" }` |
-| `POST` | `/users` | `{ persona?, tone?, stressTopics? }` |
-| `GET` | `/users/:id` | |
-| `PATCH` | `/users/:id` | `{ persona?, tone?, stressTopics? }` |
-| `POST` | `/users/:id/accounts/mock` | `{ personaKey?: "alex" \| "sam" \| "jordan" }` |
+| `POST` | `/auth/google` | Demo sign-in `{ email?, name?, mode? }` → `{ user, isNew, mode }` |
+| `POST` | `/users` | Create user (legacy; prefer `/auth/google` in UI) |
+| `GET` | `/users/:id` | Profile fields + `onboardingComplete`, `bankConnected` |
+| `PATCH` | `/users/:id` | `displayName`, `dateOfBirth`, `tone`, `onboardingComplete`, `bankConnected` |
+| `POST` | `/users/:id/accounts/mock` | Seeds mock data; sets `bankConnected: true` |
 | `GET` | `/users/:id/profile` | unified snapshot + disclaimer |
 | `GET` | `/users/:id/black-holes` | **hero report** |
 | `GET` | `/users/:id/utilization` | per-card + aggregate |
@@ -214,7 +232,7 @@ Base: `http://localhost:3001/api` (or proxied at `http://localhost:5173/api` in 
 | `POST` | `/webhooks/elevenlabs/tools/:name` | ElevenLabs server tool (`user_id` param) |
 
 `persona` (user record): `career_professional` | `high_loan` | `recovering`  
-`tone`: `coach` | `companion` | `chief_of_staff`  
+`tone`: `friend` | `mom` | `dad` (also legacy `coach` | `companion` | `chief_of_staff`)  
 `personaKey` (mock seed): `alex` | `sam` | `jordan`
 
 ### Backboard tools (coach)
@@ -249,12 +267,12 @@ Implemented in `backend/src/services/blackHoleEngine.js`.
 
 | Table | Used |
 |-------|------|
-| `users` | ✅ |
+| `users` | ✅ persona, tone, `display_name`, `date_of_birth`, `email`, `auth_provider`, `onboarding_complete`, `bank_connected` |
 | `user_accounts` | ✅ |
 | `goals` | ✅ |
 | `coach_sessions` | ✅ `backboard_thread_id` per user |
 
-DB path: `DATABASE_PATH` (default `./backend/data/app.db`). Schema in `backend/src/db/schema.sql`.
+DB path: `DATABASE_PATH` (default `./backend/data/app.db`). Schema in `backend/src/db/schema.sql`; existing DBs upgraded via `backend/src/db/migrate.js` on boot.
 
 ---
 
@@ -281,18 +299,21 @@ DB path: `DATABASE_PATH` (default `./backend/data/app.db`). Schema in `backend/s
 
 **Exit criteria:** met — coach answers grounded in tool JSON (e.g. RBC Visa ~$95.29/mo for alex).
 
-### Phase 2 — Frontend ✅
+### Phase 2 — Frontend + onboarding ✅
 
 | Step | Status |
 |------|--------|
 | `frontend/` Vite + React | ✅ |
-| CORS in `app.js` (`FRONTEND_ORIGIN`) | ✅ |
-| Vite dev proxy `/api` → `:3001` | ✅ |
-| Black Hole Report card | ✅ |
-| Coach chat → `POST /coach/message` | ✅ |
-| Demo onboarding (persona + tone) | ✅ |
-| `localStorage` user id + “New demo” reset | ✅ |
-| Coach 501 fallback message in UI when Backboard off | ✅ |
+| CORS + Vite proxy `/api` → `:3001` | ✅ |
+| **Moneytor** branding + logo | ✅ |
+| Responsive layout (desktop 2-col, mobile stack) | ✅ |
+| Onboarding: auth → profile → welcome → bank → tone | ✅ |
+| `POST /auth/google` + extended `users` + `migrate.js` | ✅ |
+| Dashboard: report, voice, coach | ✅ |
+| Coach tones: Friend / Mom / Dad | ✅ |
+| Sign out + resume incomplete onboarding | ✅ |
+| shadcn/ui + Tailwind + blocks.so patterns | ✅ |
+| Coach 501 fallback when Backboard off | ✅ |
 
 **Exit criteria:** met — full demo in browser without `curl`.
 
@@ -311,9 +332,8 @@ DB path: `DATABASE_PATH` (default `./backend/data/app.db`). Schema in `backend/s
 | `npm run convai:check` (local tool execution) | ✅ |
 | ConvAI setup guide | ✅ [ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md) |
 | Wire ElevenLabs ConvAI agent in dashboard | Manual (follow guide) |
-| (Optional) shadcn/ui + Tailwind | Deferred |
 
-**ConvAI setup:** See [docs/ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md) — `convai:check`, ngrok, tool catalog, **Copy ID** in UI.
+**ConvAI setup:** See [ELEVENLABS_CONVAI.md](ELEVENLABS_CONVAI.md) — `convai:check`, ngrok, tool catalog, **Copy ID** in dashboard.
 
 **Exit criteria:** met — TTS demo in browser; ConvAI tools verified locally; dashboard wiring documented.
 
@@ -387,6 +407,14 @@ If `.env` looks correct but startup says **not configured** (or the UI shows the
 
 Frontend optional: `frontend/.env` with `VITE_API_URL=http://localhost:3001` if not using the Vite proxy.
 
+### Troubleshooting: sign-up / login 404
+
+`POST /api/auth/google` returns **404** when the API process is stale (started before the route existed) or failed to boot.
+
+1. **Restart** both servers: `npm run dev:all` (not UI-only `dev:web`).
+2. Verify: `curl -X POST http://localhost:3001/api/auth/google -H 'Content-Type: application/json' -d '{"email":"test@example.com"}'` → **200** with `{ user, isNew }`.
+3. Use the UI at **http://localhost:5173** so Vite proxies `/api` to `:3001`.
+
 ---
 
 ## Compliance
@@ -407,6 +435,8 @@ Frontend optional: `frontend/.env` with `VITE_API_URL=http://localhost:3001` if 
 - [x] `npm run convai:check` — ConvAI tools + voice script
 - [x] Env loading reliable (`loadEnv.js` + startup diagnostics)
 - [x] Voice summary TTS via `POST /voice/speak` + `elevenlabs:check`
+- [x] Onboarding flow persists user profile and reaches dashboard
+- [x] Moneytor responsive UI on desktop and mobile
 
 ---
 
@@ -439,3 +469,4 @@ See [README.md](../README.md) for curl and UI flows.
 | Phase 2 | `frontend/` Vite app, CORS, Black Hole Report + coach chat UI |
 | Env fix | `loadEnv.js` with `override: true`; `isBackboardConfigured()`; startup env path + Backboard status log |
 | Phase 3 closed | Voice summary API, ConvAI webhooks, `convai:check`, ELEVENLABS_CONVAI.md, Copy ID, voice eval, demo-ready docs |
+| UI + onboarding | Moneytor brand, shadcn UI, multi-step onboarding, `/auth/google`, user profile migration, responsive dashboard |

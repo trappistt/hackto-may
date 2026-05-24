@@ -1,9 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
+import { Volume2 } from "lucide-react";
 import { api } from "../api.js";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function VoiceSummary({ userId, report }) {
   const [script, setScript] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState(null);
   const [ttsAvailable, setTtsAvailable] = useState(null);
@@ -54,32 +64,42 @@ export default function VoiceSummary({ userId, report }) {
   if (!report) return null;
 
   return (
-    <section className="card voice">
-      <p className="eyebrow">Voice summary</p>
-      <p className="lede small">
-        Hear your top interest black hole — powered by ElevenLabs when configured, otherwise browser speech.
-      </p>
+    <Card>
+      <CardHeader className="pb-3">
+        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+          Voice summary
+        </p>
+        <CardTitle className="font-display text-lg">Hear your top black hole</CardTitle>
+        <CardDescription>
+          Powered by ElevenLabs when configured, otherwise browser speech.
+        </CardDescription>
+      </CardHeader>
 
-      {script && (
-        <blockquote className="voice-script muted small">{script}</blockquote>
-      )}
-
-      {error && <p className="error-banner">{error}</p>}
-
-      <div className="voice-actions">
-        <button
-          type="button"
-          className="primary"
-          onClick={handleSpeak}
-          disabled={!script || speaking || loading}
-        >
-          {speaking ? "Playing…" : "Play voice summary"}
-        </button>
-        {ttsAvailable === false && (
-          <span className="muted small">Add ELEVENLABS_API_KEY for studio voice</span>
+      <CardContent className="space-y-4">
+        {script && (
+          <blockquote className="border-l-2 border-charcoal/30 pl-4 text-sm leading-relaxed text-muted-foreground">
+            {script}
+          </blockquote>
         )}
-      </div>
-    </section>
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+
+      <CardFooter className="flex flex-wrap items-center gap-3">
+        <Button type="button" onClick={handleSpeak} disabled={!script || speaking}>
+          <Volume2 className="h-4 w-4" />
+          {speaking ? "Playing…" : "Play voice summary"}
+        </Button>
+        {ttsAvailable === false && (
+          <span className="text-xs text-muted-foreground">
+            Add ELEVENLABS_API_KEY for studio voice
+          </span>
+        )}
+      </CardFooter>
+    </Card>
   );
 }
 

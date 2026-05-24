@@ -37,11 +37,41 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+/** Demo Google sign-in — creates or returns user by email (no OAuth verifier). */
+app.post("/api/auth/google", (req, res) => {
+  const name = req.body?.name?.trim() || null;
+  const emailInput = req.body?.email?.trim().toLowerCase();
+  const email =
+    emailInput || `demo-${crypto.randomUUID().slice(0, 8)}@hackto-may.local`;
+
+  let user = store.getUserByEmail(email);
+  let isNew = false;
+
+  if (!user) {
+    user = store.createUser({
+      email,
+      displayName: name,
+      authProvider: "google"
+    });
+    isNew = true;
+  } else if (name && !user.displayName) {
+    user = store.updateUser(user.id, { displayName: name });
+  }
+
+  res.json({ user, isNew, mode: req.body?.mode ?? "signin" });
+});
+
 app.post("/api/users", (req, res) => {
   const user = store.createUser({
     persona: req.body?.persona,
     tone: req.body?.tone,
-    stressTopics: req.body?.stressTopics
+    stressTopics: req.body?.stressTopics,
+    displayName: req.body?.displayName,
+    dateOfBirth: req.body?.dateOfBirth,
+    email: req.body?.email,
+    authProvider: req.body?.authProvider,
+    onboardingComplete: req.body?.onboardingComplete,
+    bankConnected: req.body?.bankConnected
   });
   res.status(201).json(user);
 });
@@ -56,7 +86,13 @@ app.patch("/api/users/:id", (req, res) => {
   const user = store.updateUser(req.params.id, {
     persona: req.body?.persona,
     tone: req.body?.tone,
-    stressTopics: req.body?.stressTopics
+    stressTopics: req.body?.stressTopics,
+    displayName: req.body?.displayName,
+    dateOfBirth: req.body?.dateOfBirth,
+    email: req.body?.email,
+    authProvider: req.body?.authProvider,
+    onboardingComplete: req.body?.onboardingComplete,
+    bankConnected: req.body?.bankConnected
   });
   if (!user) return res.status(404).json({ error: "User not found" });
   res.json(user);
@@ -68,7 +104,8 @@ app.post("/api/users/:id/accounts/mock", async (req, res, next) => {
     if (!user) return res.status(404).json({ error: "User not found" });
     const personaKey = req.body?.personaKey ?? "alex";
     const seeded = await mock.seedMockAccounts(req.params.id, personaKey);
-    res.json({ userId: req.params.id, ...seeded });
+    const updated = store.updateUser(req.params.id, { bankConnected: true });
+    res.json({ userId: req.params.id, user: updated, ...seeded });
   } catch (err) {
     next(err);
   }

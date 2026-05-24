@@ -1,8 +1,14 @@
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   persona TEXT NOT NULL DEFAULT 'career_professional',
-  tone TEXT NOT NULL DEFAULT 'coach',
+  tone TEXT NOT NULL DEFAULT 'friend',
   stress_topics TEXT,
+  display_name TEXT,
+  date_of_birth TEXT,
+  email TEXT,
+  auth_provider TEXT,
+  onboarding_complete INTEGER NOT NULL DEFAULT 0,
+  bank_connected INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

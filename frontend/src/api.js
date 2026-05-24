@@ -17,8 +17,19 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  authGoogle: (body) =>
+    request("/api/auth/google", { method: "POST", body: JSON.stringify(body) }),
+
   createUser: (body) =>
     request("/api/users", { method: "POST", body: JSON.stringify(body) }),
+
+  getUser: (userId) => request(`/api/users/${userId}`),
+
+  updateUser: (userId, body) =>
+    request(`/api/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify(body)
+    }),
 
   seedMock: (userId, personaKey) =>
     request(`/api/users/${userId}/accounts/mock`, {

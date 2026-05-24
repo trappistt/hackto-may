@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { migrate } from "./migrate.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -20,6 +21,8 @@ export function initDb(databasePath) {
 
   const schema = readFileSync(join(__dirname, "schema.sql"), "utf8");
   db.exec(schema);
+
+  migrate(db);
 
   return db;
 }

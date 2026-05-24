@@ -1,3 +1,16 @@
+import { RefreshCw, TrendingDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+
 function formatMoney(n) {
   return new Intl.NumberFormat("en-CA", {
     style: "currency",
@@ -19,12 +32,34 @@ function flagLabel(flag) {
   return labels[flag] ?? flag;
 }
 
-export default function BlackHoleReport({ report, loading, onRefresh }) {
+/** Stats + grid list patterns — inspired by blocks.so/stats and blocks.so/grid-list */
+function StatCard({ label, value, hint, className }) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-charcoal/10 bg-white p-4 shadow-sm",
+        className
+      )}
+    >
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="font-display mt-1 text-2xl font-semibold text-charcoal sm:text-3xl">
+        {value}
+      </p>
+      {hint && <p className="mt-1 text-sm text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
+
+export default function BlackHoleReport({ report, loading, onRefresh, compact = false }) {
   if (loading) {
     return (
-      <section className="card report">
-        <p className="muted">Scanning liabilities…</p>
-      </section>
+      <Card className={compact ? "shadow-none" : undefined}>
+        <CardContent className={compact ? "py-8" : "py-10"}>
+          <p className="text-center text-sm text-muted-foreground">Scanning liabilities…</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -34,72 +69,113 @@ export default function BlackHoleReport({ report, loading, onRefresh }) {
   const rec = report.recommendation;
 
   return (
-    <section className="card report">
-      <div className="report-header">
-        <div>
-          <p className="eyebrow">Interest Black Hole Report</p>
-          <h2>{formatMoney(report.totalMonthlyInterestBurn)}</h2>
-          <p className="lede small">total monthly interest bleed across all debts</p>
+    <Card className={cn(compact && "shadow-none")}>
+      <CardHeader
+        className={cn(
+          "flex flex-row items-start justify-between gap-4 space-y-0",
+          compact && "p-4 pb-2"
+        )}
+      >
+        <div className="space-y-1">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Interest Black Hole Report
+          </p>
+          <CardTitle className={cn("font-display", compact ? "text-2xl" : "text-3xl sm:text-4xl")}>
+            {formatMoney(report.totalMonthlyInterestBurn)}
+          </CardTitle>
+          <CardDescription>Total monthly interest bleed across all debts</CardDescription>
         </div>
-        <button type="button" className="ghost" onClick={onRefresh}>
+        <Button type="button" variant="outline" size="sm" onClick={onRefresh}>
+          <RefreshCw className="h-4 w-4" />
           Refresh
-        </button>
-      </div>
+        </Button>
+      </CardHeader>
 
-      {top && (
-        <div className="hero-metric">
-          <span className="label">Worst bleed</span>
-          <strong>{top.name}</strong>
-          <span className="mono">{formatMoney(top.monthlyInterest)}/mo</span>
-          <span className="muted">
-            {formatApr(top.apr)} APR · balance {formatMoney(top.balance)}
-          </span>
+      <CardContent className={cn("space-y-6", compact && "space-y-4 p-4 pt-0")}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {top && (
+            <StatCard
+              label="Worst bleed"
+              value={formatMoney(top.monthlyInterest)}
+              hint={`${top.name} · ${formatApr(top.apr)} APR`}
+            />
+          )}
+          {top && (
+            <StatCard
+              label="Balance at risk"
+              value={formatMoney(top.balance)}
+              hint={
+                top.utilization != null
+                  ? `${(top.utilization * 100).toFixed(0)}% utilized`
+                  : undefined
+              }
+            />
+          )}
         </div>
-      )}
 
-      {rec && (
-        <div className="recommendation">
-          <p className="eyebrow">Payoff recommendation</p>
-          <p>
-            Put <strong>{formatMoney(rec.extraPayment)}</strong> extra on{" "}
-            <strong>{rec.accountName}</strong> ({rec.strategy}).
-          </p>
-          <p className="mono savings">
-            ~{formatMoney(rec.interestSaved90Days)} interest saved in 90 days
-          </p>
-          <p className="muted small">{rec.rationale}</p>
-        </div>
-      )}
-
-      <ol className="ranked-list">
-        {report.ranked?.map((row, i) => (
-          <li key={row.accountId}>
-            <div className="rank">#{i + 1}</div>
-            <div className="rank-body">
-              <div className="rank-title">
-                <strong>{row.name}</strong>
-                <span className="mono bleed">{formatMoney(row.monthlyInterest)}/mo</span>
-              </div>
-              <div className="rank-meta muted">
-                Balance {formatMoney(row.balance)} · {formatApr(row.apr)}
-                {row.utilization != null &&
-                  ` · ${(row.utilization * 100).toFixed(0)}% utilized`}
-              </div>
-              {row.flags?.length > 0 && (
-                <div className="flags">
-                  {row.flags.map((f) => (
-                    <span key={f} className="flag">
-                      {flagLabel(f)}
-                    </span>
-                  ))}
-                </div>
-              )}
+        {rec && (
+          <div className="rounded-xl border border-charcoal/10 bg-charcoal/[0.03] p-5">
+            <div className="mb-2 flex items-center gap-2 text-charcoal">
+              <TrendingDown className="h-4 w-4" />
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                Payoff recommendation
+              </p>
             </div>
-          </li>
-        ))}
-      </ol>
+            <p className="text-sm leading-relaxed text-charcoal">
+              Put <strong>{formatMoney(rec.extraPayment)}</strong> extra on{" "}
+              <strong>{rec.accountName}</strong> ({rec.strategy}).
+            </p>
+            <p className="mt-2 font-mono text-sm font-medium text-charcoal">
+              ~{formatMoney(rec.interestSaved90Days)} interest saved in 90 days
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">{rec.rationale}</p>
+          </div>
+        )}
 
-      <p className="disclaimer">{report.disclaimer}</p>
-    </section>
+        <Separator />
+
+        <div className="space-y-3">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+            Ranked liabilities
+          </p>
+          <ul className="space-y-2">
+            {report.ranked?.map((row, i) => (
+              <li
+                key={row.accountId}
+                className="flex gap-4 rounded-xl border border-charcoal/10 bg-white p-4 transition-colors hover:border-charcoal/20"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-charcoal text-xs font-semibold text-snow">
+                  {i + 1}
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <strong className="text-sm text-charcoal">{row.name}</strong>
+                    <span className="font-mono text-sm font-medium text-charcoal">
+                      {formatMoney(row.monthlyInterest)}/mo
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Balance {formatMoney(row.balance)} · {formatApr(row.apr)}
+                    {row.utilization != null &&
+                      ` · ${(row.utilization * 100).toFixed(0)}% utilized`}
+                  </p>
+                  {row.flags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {row.flags.map((f) => (
+                        <Badge key={f} variant="outline" className="text-xs">
+                          {flagLabel(f)}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="text-xs leading-relaxed text-muted-foreground">{report.disclaimer}</p>
+      </CardContent>
+    </Card>
   );
 }
