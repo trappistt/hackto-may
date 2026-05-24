@@ -31,12 +31,17 @@ function mapUserRow(row) {
     authProvider: row.auth_provider ?? null,
     onboardingComplete: Boolean(row.onboarding_complete),
     bankConnected: Boolean(row.bank_connected),
+    age: row.age ?? null,
+    whoUsesTool: row.who_uses_tool ?? null,
+    lifestyleBrief: row.lifestyle_brief ?? null,
+    lifeContext: row.life_context ?? null,
     createdAt: row.created_at
   };
 }
 
 const USER_SELECT = `SELECT id, persona, tone, stress_topics, display_name, date_of_birth,
-  email, auth_provider, onboarding_complete, bank_connected, created_at FROM users`;
+  email, auth_provider, onboarding_complete, bank_connected, age, who_uses_tool,
+  lifestyle_brief, life_context, created_at FROM users`;
 
 /**
  * @param {{
@@ -105,7 +110,11 @@ export function getUser(id) {
  *   email?: string,
  *   authProvider?: string,
  *   onboardingComplete?: boolean,
- *   bankConnected?: boolean
+ *   bankConnected?: boolean,
+ *   age?: string,
+ *   whoUsesTool?: string,
+ *   lifestyleBrief?: string,
+ *   lifeContext?: string
  * }} patch
  */
 export function updateUser(id, patch) {
@@ -134,13 +143,21 @@ export function updateUser(id, patch) {
       : existing.onboardingComplete;
   const bankConnected =
     patch.bankConnected !== undefined ? patch.bankConnected : existing.bankConnected;
+  const age = patch.age !== undefined ? patch.age : existing.age;
+  const whoUsesTool =
+    patch.whoUsesTool !== undefined ? patch.whoUsesTool : existing.whoUsesTool;
+  const lifestyleBrief =
+    patch.lifestyleBrief !== undefined ? patch.lifestyleBrief : existing.lifestyleBrief;
+  const lifeContext =
+    patch.lifeContext !== undefined ? patch.lifeContext : existing.lifeContext;
 
   getDb()
     .prepare(
       `UPDATE users SET
         persona = ?, tone = ?, stress_topics = ?,
         display_name = ?, date_of_birth = ?, email = ?, auth_provider = ?,
-        onboarding_complete = ?, bank_connected = ?
+        onboarding_complete = ?, bank_connected = ?,
+        age = ?, who_uses_tool = ?, lifestyle_brief = ?, life_context = ?
       WHERE id = ?`
     )
     .run(
@@ -153,6 +170,10 @@ export function updateUser(id, patch) {
       authProvider,
       onboardingComplete ? 1 : 0,
       bankConnected ? 1 : 0,
+      age,
+      whoUsesTool,
+      lifestyleBrief,
+      lifeContext,
       id
     );
 

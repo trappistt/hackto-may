@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, STORAGE_KEY } from "./api.js";
+import { api, ONBOARDING_STEP_KEY, STORAGE_KEY } from "./api.js";
 import AppShell from "./components/AppShell.jsx";
 import OnboardingFlow from "./components/onboarding/OnboardingFlow.jsx";
 import Dashboard from "./components/Dashboard.jsx";
@@ -33,6 +33,7 @@ export default function App() {
 
   function handleSignOut() {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(ONBOARDING_STEP_KEY);
     setUser(null);
     setResumeUser(null);
   }

@@ -12,7 +12,11 @@ export function migrate(database) {
     ["email", "TEXT"],
     ["auth_provider", "TEXT"],
     ["onboarding_complete", "INTEGER NOT NULL DEFAULT 0"],
-    ["bank_connected", "INTEGER NOT NULL DEFAULT 0"]
+    ["bank_connected", "INTEGER NOT NULL DEFAULT 0"],
+    ["age", "TEXT"],
+    ["who_uses_tool", "TEXT"],
+    ["lifestyle_brief", "TEXT"],
+    ["life_context", "TEXT"]
   ];
 
   for (const [name, type] of additions) {

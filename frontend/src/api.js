@@ -55,3 +55,4 @@ export const api = {
 };
 
 export const STORAGE_KEY = "hackto_user_id";
+export const ONBOARDING_STEP_KEY = "hackto_onboarding_step";

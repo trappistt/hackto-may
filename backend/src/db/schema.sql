@@ -9,6 +9,10 @@ CREATE TABLE IF NOT EXISTS users (
   auth_provider TEXT,
   onboarding_complete INTEGER NOT NULL DEFAULT 0,
   bank_connected INTEGER NOT NULL DEFAULT 0,
+  age TEXT,
+  who_uses_tool TEXT,
+  lifestyle_brief TEXT,
+  life_context TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

@@ -5,6 +5,35 @@ import { COACH_TOOLS, runCoachTool } from "./coachTools.js";
 const BACKBOARD_BASE = "https://app.backboard.io/api";
 const MAX_TOOL_ROUNDS = 8;
 
+const TONE_INSTRUCTIONS = {
+  friend:
+    "Speak like a supportive peer: casual, encouraging, never preachy or shaming.",
+  mom: "Speak like a caring but firm parent: warm, direct, and honest about the numbers.",
+  dad: "Speak like a practical parent: straightforward, plan-focused, minimal drama.",
+  coach: "Speak like a calm financial coach: clear, actionable, non-judgmental.",
+  companion: "Speak like a trusted companion: empathetic and collaborative.",
+  chief_of_staff: "Speak like a chief of staff: concise, strategic, numbers-first."
+};
+
+/** @param {import('../db/store.js').ReturnType<typeof store.getUser>} user */
+function buildCoachPreamble(user) {
+  const lines = [];
+  const toneKey = user?.tone && TONE_INSTRUCTIONS[user.tone] ? user.tone : "friend";
+  lines.push(`[Coach tone: ${toneKey}. ${TONE_INSTRUCTIONS[toneKey]}]`);
+
+  if (user?.displayName?.trim()) {
+    lines.push(`[Address the user as ${user.displayName.trim().split(/\s+/)[0]}].`);
+  }
+  if (user?.lifestyleBrief?.trim()) {
+    lines.push(`[Lifestyle: ${user.lifestyleBrief.trim()}]`);
+  }
+  if (user?.lifeContext?.trim()) {
+    lines.push(`[What they shared about their situation: ${user.lifeContext.trim()}]`);
+  }
+
+  return `${lines.join("\n")}\n\n`;
+}
+
 function apiHeaders() {
   return {
     "X-API-Key": config.backboardApiKey,
@@ -90,9 +119,11 @@ async function runToolLoop(userId, response) {
  */
 export async function sendCoachMessage(userId, content) {
   const session = store.getCoachSession(userId);
+  const user = store.getUser(userId);
+  const preamble = user ? buildCoachPreamble(user) : "";
 
   const payload = {
-    content,
+    content: `${preamble}${content}`,
     assistant_id: config.backboardAssistantId,
     tools: COACH_TOOLS,
     stream: false,

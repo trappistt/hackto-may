@@ -1,11 +1,31 @@
 import { cn } from "@/lib/utils";
 import Logo from "@/components/Logo.jsx";
 
-export function SiteHeader({ subtitle, actions, logoSize = "lg" }) {
+export function SiteHeader({
+  subtitle,
+  actions,
+  logoSize = "lg",
+  centered = false,
+  className,
+  compactMargin = false
+}) {
   return (
-    <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0">
-        <Logo size={logoSize} />
+    <header
+      className={cn(
+        "flex flex-col gap-4",
+        centered
+          ? compactMargin
+            ? "mb-0 items-center"
+            : "mb-14 items-center"
+          : "mb-8 sm:flex-row sm:items-center sm:justify-between",
+        className
+      )}
+    >
+      <div className={cn("min-w-0", centered && "flex flex-col items-center")}>
+        <Logo
+          size={logoSize}
+          className={centered ? "mx-auto object-center" : undefined}
+        />
         {subtitle && (
           <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
         )}

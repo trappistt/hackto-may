@@ -81,7 +81,11 @@ app.post("/api/users", (req, res) => {
     email: req.body?.email,
     authProvider: req.body?.authProvider,
     onboardingComplete: req.body?.onboardingComplete,
-    bankConnected: req.body?.bankConnected
+    bankConnected: req.body?.bankConnected,
+    age: req.body?.age,
+    whoUsesTool: req.body?.whoUsesTool,
+    lifestyleBrief: req.body?.lifestyleBrief,
+    lifeContext: req.body?.lifeContext
   });
   res.status(201).json(user);
 });
@@ -102,7 +106,11 @@ app.patch("/api/users/:id", (req, res) => {
     email: req.body?.email,
     authProvider: req.body?.authProvider,
     onboardingComplete: req.body?.onboardingComplete,
-    bankConnected: req.body?.bankConnected
+    bankConnected: req.body?.bankConnected,
+    age: req.body?.age,
+    whoUsesTool: req.body?.whoUsesTool,
+    lifestyleBrief: req.body?.lifestyleBrief,
+    lifeContext: req.body?.lifeContext
   });
   if (!user) return res.status(404).json({ error: "User not found" });
   res.json(user);

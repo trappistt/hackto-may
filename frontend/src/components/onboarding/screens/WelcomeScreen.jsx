@@ -1,13 +1,8 @@
 import { Button } from "@/components/ui/button";
-import Logo from "@/components/Logo.jsx";
 
 export default function WelcomeScreen({ firstName, onContinue }) {
   return (
     <div className="flex flex-1 flex-col px-5 pb-8 pt-6 sm:px-8">
-      <div className="mb-6">
-        <Logo size="lg" />
-      </div>
-
       <h1 className="font-display text-3xl font-semibold leading-tight text-charcoal">
         Welcome, {firstName}
       </h1>

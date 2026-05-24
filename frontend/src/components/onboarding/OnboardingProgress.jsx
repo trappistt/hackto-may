@@ -1,12 +1,15 @@
 import { cn } from "@/lib/utils";
 
-const STEPS = ["auth", "profile", "welcome", "bank", "tone"];
+const STEPS = ["opener", "tone", "profile", "life", "fetching"];
 
 export default function OnboardingProgress({ step }) {
-  const index = STEPS.indexOf(step);
+  const index = Math.max(0, STEPS.indexOf(step));
 
   return (
-    <div className="flex gap-1.5" aria-label={`Step ${index + 1} of ${STEPS.length}`}>
+    <div
+      className="mb-6 flex gap-1.5"
+      aria-label={`Step ${index + 1} of ${STEPS.length}`}
+    >
       {STEPS.map((s, i) => (
         <div
           key={s}

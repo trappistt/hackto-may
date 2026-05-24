@@ -1,41 +1,29 @@
 import { Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { COACH_TONES } from "../toneCopy.js";
+import { ToneIllustration } from "../illustrations.jsx";
+import OnboardingNav from "../OnboardingNav.jsx";
 
-export const COACH_TONES = [
-  {
-    value: "friend",
-    label: "Friend",
-    description: "Casual, encouraging, talks like a peer who has your back."
-  },
-  {
-    value: "mom",
-    label: "Mom",
-    description: "Warm but firm — cares about you and won't let you dodge the numbers."
-  },
-  {
-    value: "dad",
-    label: "Dad",
-    description: "Straightforward and practical — focuses on the plan, not the drama."
-  }
-];
+export { COACH_TONES };
 
-export default function ToneScreen({ tone, onSelectTone, onFinish, loading, error }) {
+export default function ToneScreen({
+  tone,
+  onSelectTone,
+  onBack,
+  onContinue,
+  loading,
+  error
+}) {
   return (
-    <div className="flex flex-1 flex-col px-5 pb-8 pt-5 sm:px-8">
+    <div className="flex flex-1 flex-col px-1 pb-2 pt-2 sm:px-2">
       <div className="mb-6 space-y-2">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Your coach
-        </p>
-        <h1 className="font-display text-2xl font-semibold text-charcoal">
+        <p className="text-sm text-muted-foreground">Do you want me to be your…</p>
+        <h1 className="font-display text-2xl font-semibold text-charcoal sm:text-3xl">
           Choose your tone
         </h1>
-        <p className="text-sm text-muted-foreground">
-          How should your AI coach talk to you? You can change this later.
-        </p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="space-y-3">
         {COACH_TONES.map((t) => {
           const selected = tone === t.value;
           return (
@@ -44,52 +32,45 @@ export default function ToneScreen({ tone, onSelectTone, onFinish, loading, erro
               type="button"
               onClick={() => onSelectTone(t.value)}
               className={cn(
-                "w-full rounded-xl border p-4 text-left transition-all",
+                "flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-all",
                 selected
-                  ? "border-primary bg-primary text-primary-foreground shadow-md"
-                  : "border-border bg-card text-foreground hover:border-mist-300"
+                  ? "border-primary bg-primary/5 shadow-sm"
+                  : "border-border bg-card hover:border-mist-300"
               )}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-display text-lg font-semibold">{t.label}</p>
-                  <p
-                    className={cn(
-                      "mt-1 text-sm leading-snug",
-                      selected ? "text-snow/80" : "text-muted-foreground"
-                    )}
-                  >
-                    {t.description}
-                  </p>
-                </div>
-                {selected && (
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20">
-                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                  </span>
+              <span
+                className={cn(
+                  "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
+                  selected ? "border-primary bg-primary text-primary-foreground" : "border-border"
                 )}
+              >
+                {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-display text-lg font-semibold text-charcoal">{t.label}</p>
+                <p className="mt-1 text-sm leading-snug text-muted-foreground">{t.description}</p>
               </div>
             </button>
           );
         })}
       </div>
 
+      <div className="mt-6 flex justify-end">
+        <ToneIllustration tone={tone} />
+      </div>
+
       {error && (
-        <p className="mt-4 text-sm text-destructive" role="alert">
+        <p className="mt-2 text-sm text-destructive" role="alert">
           {error}
         </p>
       )}
 
-      <div className="mt-auto pt-8">
-        <Button
-          type="button"
-          size="lg"
-          className="h-12 w-full text-base"
-          disabled={!tone || loading}
-          onClick={onFinish}
-        >
-          {loading ? "Finishing…" : "Enter dashboard"}
-        </Button>
-      </div>
+      <OnboardingNav
+        onBack={onBack}
+        onContinue={onContinue}
+        continueDisabled={!tone}
+        loading={loading}
+      />
     </div>
   );
 }
